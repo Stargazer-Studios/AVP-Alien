@@ -25,22 +25,22 @@ public class AlienProperties {
         public static final BLibPropertyKey.Leaf<Boolean> DARKEN_SCREEN = HIVE.leaf("darken_screen", BLibPropertySerializers.BOOLEAN);
 
         public static final BLibPropertyKey.Leaf<Integer> LEASH_RADIUS_IN_BLOCKS = HIVE.leaf(
-            "leash_radius_in_blocks",
-            BLibPropertySerializers.INT
+                "leash_radius_in_blocks",
+                BLibPropertySerializers.INT
         );
 
         public static final BLibPropertyKey.Leaf<Integer> MAX_PRAETORIAN_COUNT = HIVE.leaf(
-            "max_praetorian_count",
-            BLibPropertySerializers.INT
+                "max_praetorian_count",
+                BLibPropertySerializers.INT
         );
 
         public static final BLibPropertyKey.Leaf<Integer> MEMBERS_REQUIRED_FOR_PRAETORIAN = HIVE.leaf(
-            "members_required_for_praetorian",
-            BLibPropertySerializers.INT
+                "members_required_for_praetorian",
+                BLibPropertySerializers.INT
         );
 
         public static final BLibPropertyKey.Leaf<Integer> MINIMUM_DISTANCE_BETWEEN_NATURAL_QUEEN_SPAWNS_IN_CHUNKS =
-            HIVE.leaf("minimum_distance_between_natural_queen_spawns_in_chunks", BLibPropertySerializers.INT);
+                HIVE.leaf("minimum_distance_between_natural_queen_spawns_in_chunks", BLibPropertySerializers.INT);
 
         public static final BLibPropertyKey.Leaf<Integer> RADIUS_IN_BLOCKS = HIVE.leaf("radius_in_blocks", BLibPropertySerializers.INT);
 
@@ -51,13 +51,13 @@ public class AlienProperties {
             public static final BLibPropertyKey.Leaf<Boolean> ENABLED = DEBUG.leaf("enabled", BLibPropertySerializers.BOOLEAN);
 
             public static final BLibPropertyKey.Leaf<Boolean> HIGHLIGHT_ALL_MEMBERS = DEBUG.leaf(
-                "highlight_all_members",
-                BLibPropertySerializers.BOOLEAN
+                    "highlight_all_members",
+                    BLibPropertySerializers.BOOLEAN
             );
 
             public static final BLibPropertyKey.Leaf<Boolean> HIGHLIGHT_LEADER = DEBUG.leaf(
-                "highlight_leader",
-                BLibPropertySerializers.BOOLEAN
+                    "highlight_leader",
+                    BLibPropertySerializers.BOOLEAN
             );
         }
     }

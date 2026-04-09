@@ -1,6 +1,7 @@
 package com.alien.common.gameplay.entity.living.alien.xenomorph.queen;
 
 import com.alien.common.data.AlienVariantTypes;
+import com.alien.common.gameplay.command.ovipositor.OvipositorPlacementDebug;
 import com.alien.common.gameplay.entity.living.alien.ovipositor.Ovipositor;
 import com.alien.common.registry.init.AlienEntityTypes;
 import com.alien.common.registry.tag.AlienEntityTypeTags;
@@ -8,7 +9,6 @@ import com.blib.api.common.entity.v1.EntityUtil;
 import com.blib.api.common.nbt.v1.model.NBTSerializable;
 import com.blib.api.common.time.v1.Cooldown;
 import com.just.core.functional.option.Option;
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -20,6 +20,8 @@ public class OvipositorManager implements NBTSerializable {
     private final Cooldown ovipositorCreationCooldown;
 
     private final Queen queen;
+
+    private @Nullable RotationLock rotationLock;
 
     private boolean hadOvipositorLastTick;
 
@@ -36,26 +38,40 @@ public class OvipositorManager implements NBTSerializable {
         ovipositorCreationCooldown.tick();
 
         var hasOvipositor = hasOvipositor();
+        var placementCheckResult = OvipositorPlacementDebug.isEnabled()
+                ? getPlacementCheckResult()
+                : null;
+
+        OvipositorPlacementDebug.render(queen, placementCheckResult);
 
         if (!hasOvipositor && hadOvipositorLastTick) {
             ovipositorCreationCooldown.reset();
         }
 
+        if (!hasOvipositor) {
+            this.rotationLock = null;
+        }
+
         this.hadOvipositorLastTick = hasOvipositor;
 
         if (hasOvipositor) {
+            initializeRotationLockIfNeeded();
+            applyRotationLock();
+
             getOvipositor().ifSome(ovipositor -> {
-                ovipositor.setYRot(queen.getYRot());
-                ovipositor.setXRot(queen.getXRot());
-                // Body rotation.
-                ovipositor.yBodyRot = queen.yBodyRot;
-                // Head rotation.
-                ovipositor.yHeadRot = queen.yHeadRot;
+                ovipositor.setYRot(rotationLock.yaw());
+                ovipositor.setXRot(rotationLock.pitch());
+                ovipositor.yRotO = rotationLock.yaw();
+                ovipositor.xRotO = rotationLock.pitch();
+                ovipositor.yBodyRot = rotationLock.bodyYaw();
+                ovipositor.yBodyRotO = rotationLock.bodyYaw();
+                ovipositor.yHeadRot = rotationLock.headYaw();
+                ovipositor.yHeadRotO = rotationLock.headYaw();
             });
             return;
         }
 
-        if (!canCreateOvipositor()) {
+        if (!canCreateOvipositor(placementCheckResult)) {
             return;
         }
 
@@ -69,10 +85,10 @@ public class OvipositorManager implements NBTSerializable {
 
     public @Nullable Ovipositor getOvipositorOrNull() {
         return (Ovipositor) queen.getPassengers()
-            .stream()
-            .filter(passenger -> passenger.getType() == AlienEntityTypes.OVIPOSITOR.get())
-            .findFirst()
-            .orElse(null);
+                .stream()
+                .filter(passenger -> passenger.getType() == AlienEntityTypes.OVIPOSITOR.get())
+                .findFirst()
+                .orElse(null);
     }
 
     public Option<Ovipositor> getOvipositor() {
@@ -87,6 +103,13 @@ public class OvipositorManager implements NBTSerializable {
         var ovipositor = AlienEntityTypes.OVIPOSITOR.get().create(queen.level());
 
         if (ovipositor != null) {
+            this.rotationLock = new RotationLock(
+                    queen.getYRot(),
+                    queen.getXRot(),
+                    queen.yBodyRot,
+                    queen.yHeadRot
+            );
+            applyRotationLock();
             ovipositor.moveTo(queen.position(), queen.getYRot(), queen.getXRot());
             ovipositor.startRiding(queen, true);
 
@@ -99,62 +122,59 @@ public class OvipositorManager implements NBTSerializable {
         }
     }
 
-    private boolean canCreateOvipositor() {
+    private void initializeRotationLockIfNeeded() {
+        if (rotationLock == null) {
+            this.rotationLock = new RotationLock(
+                    queen.getYRot(),
+                    queen.getXRot(),
+                    queen.yBodyRot,
+                    queen.yHeadRot
+            );
+        }
+    }
+
+    private void applyRotationLock() {
+        if (rotationLock == null) {
+            return;
+        }
+
+        queen.setYRot(rotationLock.yaw());
+        queen.setXRot(rotationLock.pitch());
+        queen.yRotO = rotationLock.yaw();
+        queen.xRotO = rotationLock.pitch();
+        queen.setYBodyRot(rotationLock.bodyYaw());
+        queen.setYHeadRot(rotationLock.headYaw());
+        queen.yBodyRot = rotationLock.bodyYaw();
+        queen.yBodyRotO = rotationLock.bodyYaw();
+        queen.yHeadRot = rotationLock.headYaw();
+        queen.yHeadRotO = rotationLock.headYaw();
+    }
+
+    private boolean canCreateOvipositor(@Nullable OvipositorPlacementDebug.OvipositorPlacementCheckResult placementCheckResult) {
         return queen.getTarget() == null
-            && AlienVariantTypes.getFor(queen.getVariant()).canReproduce()
-            && !queen.isPoisoned()
-            && !ovipositorCreationCooldown.isActive()
-            && queen.getHiveManager()
+                && AlienVariantTypes.getFor(queen.getVariant()).canReproduce()
+                && !queen.isPoisoned()
+                && !ovipositorCreationCooldown.isActive()
+                && queen.getHiveManager()
                 .hive()
                 .isSomeAnd(
-                    hive -> hive.isAlive()
-                        && !hive.isAngry()
-                        && hive.getMembershipManager()
-                            .getMembersMatching(entityType -> entityType.is(AlienEntityTypeTags.XENOMORPHS))
-                            .size() > 2
+                        hive -> hive.isAlive()
+                                && !hive.isAngry()
+                                && hive.getMembershipManager()
+                                .getMembersMatching(entityType -> entityType.is(AlienEntityTypeTags.XENOMORPHS))
+                                .size() > 2
                 )
-            && canOvipositorFit();
+                && (placementCheckResult == null
+                ? canOvipositorFit()
+                : placementCheckResult.canFit());
     }
 
     private boolean canOvipositorFit() {
-        var leftBottomSupport = EntityUtil.getRelativePosition(queen, 1.5, 0, 2.5);
-        var rightBottomSupport = EntityUtil.getRelativePosition(queen, -2, 0, 2);
-        var farLeftBottomSupport = EntityUtil.getRelativePosition(queen, 5.7, 0, 8.25);
-        var backBottomSupport = EntityUtil.getRelativePosition(queen, 0, 0, 7);
-
-        return canOvipositorSupportExistAt(leftBottomSupport)
-            && canOvipositorSupportExistAt(rightBottomSupport)
-            && canOvipositorSupportExistAt(farLeftBottomSupport)
-            && canOvipositorSupportExistAt(backBottomSupport)
-            && isEggLayingPositionValid();
+        return getPlacementCheckResult().canFit();
     }
 
-    private boolean isEggLayingPositionValid() {
-        var eggLayingPosition = getEggLayingPosition();
-        var blockState = queen.level().getBlockState(BlockPos.containing(eggLayingPosition));
-        var isClearForEgg = blockState.isAir() || blockState.canBeReplaced();
-
-        return isClearForEgg && EntityUtil.canMobSeeBlock(queen, eggLayingPosition);
-    }
-
-    private boolean canOvipositorSupportExistAt(Vec3 vec3) {
-        var blockPos = BlockPos.containing(vec3);
-
-        var isSupported = false;
-        var stepsDown = 0;
-
-        while (!isSupported && stepsDown < 4) {
-            blockPos = blockPos.below();
-            var blockState = queen.level().getBlockState(blockPos);
-
-            var aboveBlockState = queen.level().getBlockState(blockPos.above());
-            isSupported = (aboveBlockState.isAir() || aboveBlockState.canBeReplaced())
-                && !(blockState.isAir() || blockState.canBeReplaced());
-
-            stepsDown++;
-        }
-
-        return isSupported && EntityUtil.canMobSeeBlock(queen, vec3);
+    private OvipositorPlacementDebug.OvipositorPlacementCheckResult getPlacementCheckResult() {
+        return OvipositorPlacementDebug.getPlacementCheckResult(queen, getEggLayingPosition());
     }
 
     @Override
@@ -166,4 +186,11 @@ public class OvipositorManager implements NBTSerializable {
     public void save(CompoundTag compoundTag) {
         ovipositorCreationCooldown.save(compoundTag);
     }
+
+    private record RotationLock(
+            float yaw,
+            float pitch,
+            float bodyYaw,
+            float headYaw
+    ) {}
 }

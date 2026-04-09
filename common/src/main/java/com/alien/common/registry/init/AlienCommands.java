@@ -4,6 +4,7 @@ import com.alien.Alien;
 import com.alien.common.gameplay.command.count.CountCommand;
 import com.alien.common.gameplay.command.hive.CurrentHiveLayerCommand;
 import com.alien.common.gameplay.command.hive.NearestHiveCommand;
+import com.alien.common.gameplay.command.ovipositor.OvipositorDebugCommand;
 import com.blib.api.common.registry.v1.impl.BLibCommandRegistry;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.minecraft.commands.CommandSourceStack;
@@ -18,9 +19,8 @@ public class AlienCommands {
             LiteralArgumentBuilder.<CommandSourceStack>literal(Alien.MOD.id())
                 .then(
                     Commands.literal("debug")
-                        .requires(
-                            commandSourceStack -> commandSourceStack.hasPermission(Commands.LEVEL_GAMEMASTERS)
-                        )
+                        .requires(commandSourceStack -> commandSourceStack.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                        .then(OvipositorDebugCommand.create())
                         .then(CountCommand.create())
                         .then(
                             Commands.literal("hive")
