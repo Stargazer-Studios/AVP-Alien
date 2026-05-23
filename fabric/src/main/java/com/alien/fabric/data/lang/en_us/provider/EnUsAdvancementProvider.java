@@ -37,7 +37,7 @@ public class EnUsAdvancementProvider {
         addAdvancement(
             builder,
             AlienAdvancements.LEAD_RAID_TO_ENEMY_HIVE,
-            "And Hell Followed With Them",
+            "And Hell Followed With You",
             "Lead a raid to a hive of a different xenomorph variant"
         );
 
@@ -79,7 +79,7 @@ public class EnUsAdvancementProvider {
         addAdvancement(
             builder,
             AlienAdvancements.KILL_ALL_ALIENS,
-            "Xenocide",
+            "Total Xenocide",
             "Complete every variant xenocide advancement"
         );
 
@@ -107,7 +107,7 @@ public class EnUsAdvancementProvider {
         addAdvancement(
             builder,
             AlienAdvancements.KILL_ALL_NORMAL_ALIENS,
-            "Classic Xenocide",
+            "Xenocide",
             "Kill one of every normal alien"
         );
 

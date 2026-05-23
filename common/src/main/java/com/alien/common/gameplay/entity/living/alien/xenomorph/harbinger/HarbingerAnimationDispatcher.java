@@ -1,52 +1,47 @@
 package com.alien.common.gameplay.entity.living.alien.xenomorph.harbinger;
 
 import com.alien.common.util.AzAlienAnimationUtil;
-import com.blib.api.client.animation.v1.AzAnimationUtil;
 import com.blib.api.client.animation.v1.command.AzCommand;
 import com.blib.api.client.animation.v1.command.play_behavior.AzPlayBehaviors;
 import com.blib.api.client.animation.v1.command.policy.AzDispatchMode;
 
 public class HarbingerAnimationDispatcher {
 
-    private static final AzCommand<Harbinger> ARMATTACK_RIGHTARM = AzCommand.<Harbinger>replay()
-        .play(AzAlienAnimationUtil.RIGHT_ARM, HarbingerAnimationRefs.ATTACKCLAW_RIGHTARM_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+    private static final AzCommand<Harbinger> CLAW_ATTACK = AzCommand.<Harbinger>replay()
+        .play(AzAlienAnimationUtil.BODY, HarbingerAnimationRefs.ATTACK_CLAW_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Harbinger> BITEATTACK_HEAD = AzCommand.<Harbinger>replay()
-        .play(AzAlienAnimationUtil.HEAD, HarbingerAnimationRefs.ATTACKBITE_HEAD_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+    private static final AzCommand<Harbinger> BITE_ATTACK = AzCommand.<Harbinger>replay()
+        .play(AzAlienAnimationUtil.BODY, HarbingerAnimationRefs.ATTACK_BITE_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Harbinger> TAILATTACKQUAD_TAIL = AzCommand.<Harbinger>replay()
-        .play(AzAlienAnimationUtil.TAIL, HarbingerAnimationRefs.ATTACKTAIL_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+    private static final AzCommand<Harbinger> TAIL_ATTACK = AzCommand.<Harbinger>replay()
+        .play(AzAlienAnimationUtil.BODY, HarbingerAnimationRefs.ATTACK_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Harbinger> IDLE_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "idle",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Harbinger> CRAWL = AzCommand.<Harbinger>idempotent()
+        .play(AzAlienAnimationUtil.BODY, HarbingerAnimationRefs.CRAWL_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Harbinger> RUN_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "run",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Harbinger> CRAWL_IDLE = AzCommand.<Harbinger>idempotent()
+        .play(AzAlienAnimationUtil.BODY, HarbingerAnimationRefs.CRAWL_IDLE_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Harbinger> SWIM_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "swim",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Harbinger> IDLE = AzCommand.<Harbinger>idempotent()
+        .play(AzAlienAnimationUtil.BODY, HarbingerAnimationRefs.IDLE_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Harbinger> WALK_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "walk",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Harbinger> RUN = AzCommand.<Harbinger>idempotent()
+        .play(AzAlienAnimationUtil.BODY, HarbingerAnimationRefs.RUN_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
+
+    private static final AzCommand<Harbinger> SWIM = AzCommand.<Harbinger>idempotent()
+        .play(AzAlienAnimationUtil.BODY, HarbingerAnimationRefs.SWIM_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
+
+    private static final AzCommand<Harbinger> WALK = AzCommand.<Harbinger>idempotent()
+        .play(AzAlienAnimationUtil.BODY, HarbingerAnimationRefs.WALK_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
     private final Harbinger harbinger;
 
@@ -54,54 +49,72 @@ public class HarbingerAnimationDispatcher {
         this.harbinger = harbinger;
     }
 
+    public void crawl() {
+        CRAWL.dispatchForEntity(harbinger);
+    }
+
+    public void crawl(float speed) {
+        AzAlienAnimationUtil.singleWithSpeed(
+            AzAlienAnimationUtil.BODY,
+            HarbingerAnimationRefs.CRAWL_ANIMATION_NAME,
+            AzPlayBehaviors.LOOP,
+            AzDispatchMode.PLAY_IF_NOT_PLAYING,
+            speed
+        ).dispatchForEntity(harbinger);
+    }
+
+    public void crawlIdle() {
+        CRAWL_IDLE.dispatchForEntity(harbinger);
+    }
+
     public void idle() {
-        IDLE_ALL.dispatchForEntity(harbinger);
+        IDLE.dispatchForEntity(harbinger);
     }
 
     public void run() {
-        RUN_ALL.dispatchForEntity(harbinger);
+        RUN.dispatchForEntity(harbinger);
     }
 
     public void swim() {
-        SWIM_ALL.dispatchForEntity(harbinger);
+        SWIM.dispatchForEntity(harbinger);
     }
 
     public void walk() {
-        WALK_ALL.dispatchForEntity(harbinger);
+        WALK.dispatchForEntity(harbinger);
     }
 
     public void biteAttack() {
-        BITEATTACK_HEAD.dispatchForEntity(harbinger);
+        BITE_ATTACK.dispatchForEntity(harbinger);
     }
 
     public void biteAttack(float speed) {
         AzCommand.<Harbinger>replay()
-            .play(AzAlienAnimationUtil.HEAD, HarbingerAnimationRefs.ATTACKBITE_HEAD_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
-            .setSpeed(AzAlienAnimationUtil.HEAD, speed)
+            .play(AzAlienAnimationUtil.BODY, HarbingerAnimationRefs.ATTACK_BITE_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+            .setSpeed(AzAlienAnimationUtil.BODY, speed)
             .build()
             .dispatchForEntity(harbinger);
     }
 
     public void rightClawAttack() {
-        ARMATTACK_RIGHTARM.dispatchForEntity(harbinger);
+        CLAW_ATTACK.dispatchForEntity(harbinger);
     }
 
     public void rightClawAttack(float speed) {
         AzCommand.<Harbinger>replay()
-            .play(AzAlienAnimationUtil.RIGHT_ARM, HarbingerAnimationRefs.ATTACKCLAW_RIGHTARM_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
-            .setSpeed(AzAlienAnimationUtil.RIGHT_ARM, speed)
+            .play(AzAlienAnimationUtil.BODY, HarbingerAnimationRefs.ATTACK_CLAW_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+            .setSpeed(AzAlienAnimationUtil.BODY, speed)
             .build()
             .dispatchForEntity(harbinger);
     }
 
     public void tailAttack() {
-        TAILATTACKQUAD_TAIL.dispatchForEntity(harbinger);
+        TAIL_ATTACK.dispatchForEntity(harbinger);
     }
 
     public void tailAttack(float speed) {
         AzCommand.<Harbinger>replay()
-            .play(AzAlienAnimationUtil.TAIL, HarbingerAnimationRefs.ATTACKTAIL_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
-            .setSpeed(AzAlienAnimationUtil.TAIL, speed)
+            .play(AzAlienAnimationUtil.BODY, HarbingerAnimationRefs.ATTACK_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+            .setSpeed(AzAlienAnimationUtil.BODY, speed)
             .build()
             .dispatchForEntity(harbinger);
     }

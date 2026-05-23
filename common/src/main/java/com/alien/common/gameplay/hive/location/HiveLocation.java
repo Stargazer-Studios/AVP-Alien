@@ -1,6 +1,7 @@
 package com.alien.common.gameplay.hive.location;
 
 import com.alien.Alien;
+import com.alien.common.gameplay.hive.config.HiveConfig;
 import com.alien.common.gameplay.hive.faction.LineageFactionData;
 import com.alien.common.gameplay.hive.id.HiveLocationId;
 import com.alien.common.model.alien.variant.AlienVariant;
@@ -67,6 +68,10 @@ public final class HiveLocation {
     private static final String NBT_EVACUATING_REMAINING = "EvacuatingRemainingTicks";
 
     private static final String NBT_NO_CONTACT_TICKS_ACCRUED = "NoContactTicksAccrued";
+
+    private static final String NBT_COMBAT_RESPITE_REMAINING_TICKS = "CombatRespiteRemainingTicks";
+
+    private static final String NBT_COMBAT_KILLS_SINCE_LAST_RESPITE = "CombatKillsSinceLastRespite";
 
     private static final String NBT_LOCATION_NUMBER = "LocationNumber";
 
@@ -140,6 +145,10 @@ public final class HiveLocation {
      * inside the territory. Persisted across restarts.
      */
     private long noContactTicksAccrued;
+
+    private long combatRespiteRemainingTicks;
+
+    private int combatKillsSinceLastRespite;
 
     /**
      * Per-lineage index assigned at mint, used in {@link com.alien.common.gameplay.hive.faction.FactionNaming}. -1 =
@@ -232,6 +241,8 @@ public final class HiveLocation {
         this.peakDecayElapsedTicks = 0L;
         this.evacuatingRemainingTicks = 0L;
         this.noContactTicksAccrued = 0L;
+        this.combatRespiteRemainingTicks = 0L;
+        this.combatKillsSinceLastRespite = 0;
         this.locationNumber = -1L;
         this.queenlessMaturationLastAdvanceTick = Long.MIN_VALUE;
         this.queenlessLeaderSnapshot = null;
@@ -367,6 +378,47 @@ public final class HiveLocation {
         this.noContactTicksAccrued = Math.max(0L, noContactTicksAccrued);
     }
 
+    public long combatRespiteRemainingTicks() {
+        return combatRespiteRemainingTicks;
+    }
+
+    public boolean isInCombatRespite() {
+        return combatRespiteRemainingTicks > 0L;
+    }
+
+    public int combatKillsSinceLastRespite() {
+        return combatKillsSinceLastRespite;
+    }
+
+    public void recordCombatKill(BlockPos playerPos, HiveConfig config) {
+        if (isInCombatRespite() || config.combatRespiteKillThreshold() <= 0) {
+            return;
+        }
+
+        combatKillsSinceLastRespite = Math.max(0, combatKillsSinceLastRespite) + 1;
+        if (combatKillsSinceLastRespite < config.combatRespiteKillThreshold()) {
+            return;
+        }
+
+        combatKillsSinceLastRespite = 0;
+        combatRespiteRemainingTicks = respiteDurationTicks(playerPos, config);
+    }
+
+    private long respiteDurationTicks(BlockPos playerPos, HiveConfig config) {
+        var min = Math.max(0L, config.combatRespiteMinTicks());
+        var max = Math.max(min, config.combatRespiteMaxTicks());
+        if (max <= min) {
+            return min;
+        }
+
+        var centerChunkRadiusBlocks = 16.0;
+        var outerRadiusBlocks = Math.max(centerChunkRadiusBlocks + 1.0, config.bossBarDisplayRadiusBlocks());
+        var distance = Math.sqrt(playerPos.distSqr(centerPos));
+        var normalized = (distance - centerChunkRadiusBlocks) / (outerRadiusBlocks - centerChunkRadiusBlocks);
+        normalized = Math.max(0.0, Math.min(1.0, normalized));
+        return Math.round(min + (max - min) * normalized);
+    }
+
     public long locationNumber() {
         return locationNumber;
     }
@@ -497,6 +549,7 @@ public final class HiveLocation {
      * convoy interactions, etc.
      */
     public void tick(MinecraftServer server, LineageFactionData lineage) {
+        decayCombatRespite();
         leadership.pickBestLeader(loadedMembersByType);
 
         if (bossBar == null) {
@@ -507,6 +560,12 @@ public final class HiveLocation {
 
         // Phase 3 leaves reserve top-up empty here. Phase 4 will hook the
         // periodic outer-edge top-up from HIVE_REDESIGN_05_RESERVES.md § 3 row 3.
+    }
+
+    private void decayCombatRespite() {
+        if (combatRespiteRemainingTicks > 0L) {
+            combatRespiteRemainingTicks--;
+        }
     }
 
     /** Called by the registry when this location is unregistered (lineage absorbed or location death). */
@@ -547,6 +606,12 @@ public final class HiveLocation {
         tag.putLong(NBT_EVACUATING_REMAINING, evacuatingRemainingTicks);
         if (noContactTicksAccrued > 0L) {
             tag.putLong(NBT_NO_CONTACT_TICKS_ACCRUED, noContactTicksAccrued);
+        }
+        if (combatRespiteRemainingTicks > 0L) {
+            tag.putLong(NBT_COMBAT_RESPITE_REMAINING_TICKS, combatRespiteRemainingTicks);
+        }
+        if (combatKillsSinceLastRespite > 0) {
+            tag.putInt(NBT_COMBAT_KILLS_SINCE_LAST_RESPITE, combatKillsSinceLastRespite);
         }
         if (locationNumber >= 0) {
             tag.putLong(NBT_LOCATION_NUMBER, locationNumber);
@@ -671,6 +736,8 @@ public final class HiveLocation {
         location.noContactTicksAccrued = tag.contains(NBT_NO_CONTACT_TICKS_ACCRUED)
             ? Math.max(0L, tag.getLong(NBT_NO_CONTACT_TICKS_ACCRUED))
             : 0L;
+        location.combatRespiteRemainingTicks = Math.max(0L, tag.getLong(NBT_COMBAT_RESPITE_REMAINING_TICKS));
+        location.combatKillsSinceLastRespite = Math.max(0, tag.getInt(NBT_COMBAT_KILLS_SINCE_LAST_RESPITE));
         location.locationNumber = tag.contains(NBT_LOCATION_NUMBER) ? tag.getLong(NBT_LOCATION_NUMBER) : -1L;
         location.queenlessMaturationLastAdvanceTick = tag.contains(NBT_QUEENLESS_MATURATION_LAST_ADVANCE)
             ? tag.getLong(NBT_QUEENLESS_MATURATION_LAST_ADVANCE)

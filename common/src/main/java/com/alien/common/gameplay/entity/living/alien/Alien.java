@@ -800,6 +800,7 @@ public abstract class Alien extends Monster implements DataUser {
                     && level() instanceof ServerLevel serverLevel
             ) {
                 attributeKillToLineages(player.getUUID(), serverLevel.getGameTime());
+                recordHiveCombatKill(player);
             }
             ConvoyMemberTracker.unregisterKilled(this);
             // Hive empress death clears the lineage's empress slot so the next emergence ritual can fire.
@@ -843,6 +844,22 @@ public abstract class Alien extends Monster implements DataUser {
                 continue;
             }
             lineage.recordKillByPlayer(playerId, currentTick, aggroWindow);
+        }
+    }
+
+    private void recordHiveCombatKill(ServerPlayer player) {
+        var location = HiveMemberLocationResolver.reserveReturnLocation(this);
+        if (location == null) {
+            location = HiveLocationRegistry.INSTANCE.getByChunk(level().dimension(), chunkPosition());
+        }
+        if (location == null || !location.isAlive()) {
+            return;
+        }
+
+        location.recordCombatKill(player.blockPosition(), HiveLocationRegistry.INSTANCE.config());
+        var faction = com.alien.Alien.MOD.factions().get(location.lineageFactionId());
+        if (faction != null && faction.data() instanceof LineageFactionData lineage) {
+            lineage.markDirty();
         }
     }
 

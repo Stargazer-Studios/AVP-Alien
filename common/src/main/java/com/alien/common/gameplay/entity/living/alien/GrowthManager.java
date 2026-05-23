@@ -34,9 +34,9 @@ public class GrowthManager implements NBTSerializable {
     public static final Set<String> TRANSITION_NBT_KEY_BLACKLIST = Util.make(() -> {
         var set = new HashSet<>(EntityTransitionUtil.DEFAULT_NBT_KEY_BLACKLIST);
         set.add(GROWTH_TIME_IN_TICKS_TAG_KEY);
-        set.add(MoltingManager.FORM_SCALE_PHASE_INDEX_TAG);
-        set.add(MoltingManager.FORM_SCALE_PHASE_TICKS_TAG);
-        set.add(MoltingManager.FORM_SCALE_TARGET_REACHED_TICKS_TAG);
+        set.add(MoltingManager.MOLT_PHASE_INDEX_TAG);
+        set.add(MoltingManager.MOLT_PHASE_TICKS_TAG);
+        set.add(MoltingManager.MOLT_TARGET_SCALE_REACHED_TICKS_TAG);
         set.add(com.alien.common.gameplay.entity.living.alien.xenomorph.CocoonManager.COCOON_STATE_TAG);
         set.add(com.alien.common.gameplay.entity.living.alien.xenomorph.CocoonManager.COCOON_TARGET_TYPE_TAG);
         set.add(com.alien.common.gameplay.entity.living.alien.xenomorph.CocoonManager.COCOON_SOURCE_TIME_TAG);

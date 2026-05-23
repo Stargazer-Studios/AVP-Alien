@@ -33,24 +33,6 @@ public class SpitterAnimator extends AzEntityAnimator<Spitter> {
         animationTrackContainer.add(
             AzAnimationTrack.builder(this, AzAlienAnimationUtil.BODY)
                 .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.HEAD)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.TAIL)
-                .setTransitionLength(5)
                 .build()
         );
     }
@@ -110,7 +92,7 @@ public class SpitterAnimator extends AzEntityAnimator<Spitter> {
             animFunction = dispatcher::swim;
         } else if (isMovingOnGround) {
             if (isCrawling) {
-                animFunction = dispatcher::crawl;
+                animFunction = () -> dispatcher.crawl(AzAlienAnimationUtil.crawlAnimationSpeed(spitter));
             } else if (spitter.isMovingQuickly.get()) {
                 animFunction = dispatcher::run;
             } else {
@@ -128,11 +110,11 @@ public class SpitterAnimator extends AzEntityAnimator<Spitter> {
         String animationName;
 
         if (attackType == Spitter.BITE) {
-            animationName = SpitterAnimationRefs.ATTACKBITE_HEAD_ANIMATION_NAME;
+            animationName = SpitterAnimationRefs.FULL_ATTACK_BITE_ANIMATION_NAME;
         } else if (attackType == Spitter.CLAW) {
-            animationName = SpitterAnimationRefs.ATTACKCLAW_RIGHTARM_ANIMATION_NAME;
+            animationName = SpitterAnimationRefs.FULL_ATTACK_CLAW_ANIMATION_NAME;
         } else if (attackType == Spitter.TAIL) {
-            animationName = SpitterAnimationRefs.ATTACKTAIL_TAIL_ANIMATION_NAME;
+            animationName = SpitterAnimationRefs.FULL_ATTACK_TAIL_ANIMATION_NAME;
         } else {
             animationName = null;
         }

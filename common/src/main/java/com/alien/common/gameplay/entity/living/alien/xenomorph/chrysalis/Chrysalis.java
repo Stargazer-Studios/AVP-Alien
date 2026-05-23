@@ -35,16 +35,19 @@ import org.jetbrains.annotations.Nullable;
 public class Chrysalis extends Xenomorph implements GOAPUser<Chrysalis> {
 
     public static final AttackType CLAW = AttackType.builder("chrysalis_claw")
+        .requiresAnyArm()
         .defaultDurationInTicks(10)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType BITE = AttackType.builder("chrysalis_bite")
+        .requiresHead()
         .defaultDurationInTicks(8)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType TAIL = AttackType.builder("chrysalis_tail")
+        .requiresTail()
         .defaultDurationInTicks(12)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();

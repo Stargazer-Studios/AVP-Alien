@@ -35,15 +35,12 @@ public final class XenomorphAttackConfig {
         return !regulars.isEmpty();
     }
 
-    /**
-     * Picks a weighted-random regular attack whose cooldown is ready. Returns {@code null} if there are no eligible
-     * attacks.
-     */
-    public @Nullable AttackType selectRegular(RandomSource random, AttackCooldownTracker cooldownTracker) {
+    /** Picks a weighted-random regular attack whose cooldown is ready and whose requirements are satisfied. */
+    public @Nullable AttackType selectRegular(RandomSource random, AttackCooldownTracker cooldownTracker, Xenomorph xenomorph) {
         var totalWeight = 0;
 
         for (var weighted : regulars) {
-            if (cooldownTracker.isReady(weighted.attack())) {
+            if (cooldownTracker.isReady(weighted.attack()) && weighted.attack().canUse(xenomorph)) {
                 totalWeight += weighted.weight();
             }
         }
@@ -55,7 +52,7 @@ public final class XenomorphAttackConfig {
         var roll = random.nextInt(totalWeight);
 
         for (var weighted : regulars) {
-            if (!cooldownTracker.isReady(weighted.attack())) {
+            if (!cooldownTracker.isReady(weighted.attack()) || !weighted.attack().canUse(xenomorph)) {
                 continue;
             }
 

@@ -1,5 +1,6 @@
 package com.alien.common.gameplay.entity;
 
+import com.alien.AlienResources;
 import com.blib.api.common.data_sync.v1.DataAccessor;
 import com.blib.api.common.dismemberment.v1.Dismemberable;
 import com.blib.api.common.dismemberment.v1.LimbCategories;
@@ -8,11 +9,23 @@ import com.blib.api.common.nbt.v1.model.NBTSerializable;
 import com.blib.api.common.pathfinding.v1.navigator.PathNavigatorUser;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 
 public class CrawlingManager implements NBTSerializable {
 
     private static final String NBT_CRAWLING = "crawling";
+
+    private static final ResourceLocation CRAWLING_MOVEMENT_SPEED_MODIFIER = AlienResources.location("crawling_movement_speed");
+
+    private static final float BASE_CRAWL_SLOWDOWN = 0.1F;
+
+    private static final float CRAWL_SLOWDOWN_PER_LOST_LIMB = 0.1F;
+
+    private static final float MAX_CRAWL_SLOWDOWN = 0.5F;
 
     private final PathfinderMob entity;
 
@@ -40,14 +53,28 @@ public class CrawlingManager implements NBTSerializable {
         }
 
         if (!canCrawl) {
+            removeMovementSpeedModifier();
             return;
         }
 
         tryToCrawl();
+        applyMovementSpeedModifier();
     }
 
     public boolean isCrawling() {
         return isCrawling.get();
+    }
+
+    public static float getCrawlSpeedMultiplier(PathfinderMob entity) {
+        return 1.0F - getCrawlSlowdown(entity);
+    }
+
+    private static float getCrawlSlowdown(PathfinderMob entity) {
+        return Mth.clamp(
+            BASE_CRAWL_SLOWDOWN + CRAWL_SLOWDOWN_PER_LOST_LIMB * detachedArmOrLegCount(entity),
+            BASE_CRAWL_SLOWDOWN,
+            MAX_CRAWL_SLOWDOWN
+        );
     }
 
     private void tryToCrawl() {
@@ -61,7 +88,7 @@ public class CrawlingManager implements NBTSerializable {
 
         var path = navigation.getPath();
         var pathRequestsCrawl = entity instanceof PathNavigatorUser navigatorUser
-            && navigatorUser.getPathNavigator().shouldCrawl();
+            && navigatorUser.getPathNavigator().getPostureView().shouldCrawl();
         var isTight = pathRequestsCrawl || isTightSpace(blockPosition);
 
         if (path != null && path.getNextNodeIndex() < path.getNodeCount()) {
@@ -92,6 +119,63 @@ public class CrawlingManager implements NBTSerializable {
         }
 
         return false;
+    }
+
+    private void applyMovementSpeedModifier() {
+        var attributeInstance = entity.getAttribute(Attributes.MOVEMENT_SPEED);
+
+        if (attributeInstance == null) {
+            return;
+        }
+
+        attributeInstance.removeModifier(CRAWLING_MOVEMENT_SPEED_MODIFIER);
+
+        if (!isCrawling()) {
+            return;
+        }
+
+        attributeInstance.addTransientModifier(
+            new AttributeModifier(
+                CRAWLING_MOVEMENT_SPEED_MODIFIER,
+                -getCrawlSlowdown(entity),
+                AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+            )
+        );
+    }
+
+    private void removeMovementSpeedModifier() {
+        var attributeInstance = entity.getAttribute(Attributes.MOVEMENT_SPEED);
+
+        if (attributeInstance != null) {
+            attributeInstance.removeModifier(CRAWLING_MOVEMENT_SPEED_MODIFIER);
+        }
+    }
+
+    private static int detachedArmOrLegCount(PathfinderMob entity) {
+        if (!(entity instanceof Dismemberable dismemberable)) {
+            return 0;
+        }
+
+        var manager = dismemberable.getDismembermentManager();
+
+        if (manager == null || !manager.hasAnyDetached()) {
+            return 0;
+        }
+
+        var count = 0;
+
+        for (var definition : LimbDefinitionRegistry.getDefinitions(entity.getType())) {
+            var category = definition.category();
+
+            if (
+                (category.equals(LimbCategories.ARM) || category.equals(LimbCategories.LEG))
+                    && manager.isDetached(definition)
+            ) {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     private boolean isTightSpace(BlockPos blockPos) {

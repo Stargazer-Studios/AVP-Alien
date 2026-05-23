@@ -36,16 +36,19 @@ import java.util.function.BiConsumer;
 public class Runner extends Xenomorph implements EggCarrier, GOAPUser<Runner>, VentBuilder {
 
     public static final AttackType CLAW = AttackType.builder("runner_claw")
+        .requiresAnyArm()
         .defaultDurationInTicks(10)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType BITE = AttackType.builder("runner_bite")
+        .requiresHead()
         .defaultDurationInTicks(8)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType TAIL_QUAD = AttackType.builder("runner_tail_quad")
+        .requiresTail()
         .defaultDurationInTicks(10)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();

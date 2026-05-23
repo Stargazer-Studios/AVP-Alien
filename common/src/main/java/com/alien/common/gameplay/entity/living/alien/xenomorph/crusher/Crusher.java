@@ -23,11 +23,13 @@ import org.jetbrains.annotations.Nullable;
 public class Crusher extends Xenomorph implements GOAPUser<Crusher> {
 
     public static final AttackType BITE = AttackType.builder("crusher_bite")
+        .requiresHead()
         .defaultDurationInTicks(12)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType TAIL = AttackType.builder("crusher_tail")
+        .requiresTail()
         .defaultDurationInTicks(15)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();

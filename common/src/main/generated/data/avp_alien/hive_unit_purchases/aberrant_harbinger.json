@@ -1,6 +1,5 @@
 {
   "biomass": 200,
-  "population_biomass_cost_scale": 0.05,
   "conditions": [
     {
       "type": "min_population",
@@ -19,5 +18,6 @@
     }
   ],
   "output_entity": "avp_alien:aberrant_harbinger",
+  "population_biomass_cost_scale": 0.05,
   "scourge_jelly": 1
 }

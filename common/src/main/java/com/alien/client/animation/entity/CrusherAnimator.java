@@ -33,24 +33,6 @@ public class CrusherAnimator extends AzEntityAnimator<Crusher> {
         animationTrackContainer.add(
             AzAnimationTrack.builder(this, AzAlienAnimationUtil.BODY)
                 .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.HEAD)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.TAIL)
-                .setTransitionLength(5)
                 .build()
         );
     }
@@ -99,20 +81,22 @@ public class CrusherAnimator extends AzEntityAnimator<Crusher> {
         }
 
         var isMovingOnGround = crusher.isMovingHorizontally.get() && crusher.onGround();
+        var isCrawling = crusher.getCrawlingManager().isCrawling();
         Runnable animFunction;
 
         if (crusher.isUnderWater()) {
             // TODO: idle swim
             animFunction = dispatcher::swim;
         } else if (isMovingOnGround) {
-            if (crusher.isMovingQuickly.get()) {
+            if (isCrawling) {
+                animFunction = () -> dispatcher.crawl(AzAlienAnimationUtil.crawlAnimationSpeed(crusher));
+            } else if (crusher.isMovingQuickly.get()) {
                 animFunction = dispatcher::run;
             } else {
                 animFunction = dispatcher::walk;
             }
         } else {
-            // TODO: idle crawl
-            animFunction = dispatcher::idle;
+            animFunction = isCrawling ? dispatcher::crawlIdle : dispatcher::idle;
         }
 
         animFunction.run();
@@ -122,9 +106,9 @@ public class CrusherAnimator extends AzEntityAnimator<Crusher> {
         String animationName;
 
         if (attackType == Crusher.BITE)
-            animationName = CrusherAnimationRefs.BITEATTACK_HEAD_ANIMATION_NAME;
+            animationName = CrusherAnimationRefs.BITE_ATTACK_ANIMATION_NAME;
         else if (attackType == Crusher.TAIL)
-            animationName = CrusherAnimationRefs.TAILATTACK_TAIL_ANIMATION_NAME;
+            animationName = CrusherAnimationRefs.TAIL_ATTACK_ANIMATION_NAME;
         else
             animationName = null;
 

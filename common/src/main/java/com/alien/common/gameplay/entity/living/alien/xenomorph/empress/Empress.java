@@ -33,16 +33,19 @@ import java.util.Objects;
 public class Empress extends Xenomorph implements GOAPUser<Empress>, EggLayer {
 
     public static final AttackType SWIPE_DOWN = AttackType.builder("empress_swipe_down")
+        .requiresAnyArm()
         .defaultDurationInTicks(18)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType BACKHAND = AttackType.builder("empress_backhand")
+        .requiresAnyArm()
         .defaultDurationInTicks(15)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType TAIL_STRIKE = AttackType.builder("empress_tail_strike")
+        .requiresTail()
         .defaultDurationInTicks(20)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();

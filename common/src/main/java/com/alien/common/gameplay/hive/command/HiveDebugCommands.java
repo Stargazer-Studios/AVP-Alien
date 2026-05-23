@@ -320,7 +320,7 @@ public final class HiveDebugCommands {
                 () -> Component.literal(
                     "  claimedChunks=" + location.claimedChunks().size()
                         + ", decoratedChunks=" + location.decoratedChunks().size()
-                        + ", reserves total=" + location.localReserves().getCount()
+                        + ", reserves total=" + location.localReserves().getReliableCount()
                 ),
                 false
             );
@@ -346,6 +346,8 @@ public final class HiveDebugCommands {
                             ? "(uninitialized)"
                             : "angry=" + bossBar.isAngry() + " evacuating=" + bossBar.isEvacuating())
                         + ", evacuatingTicksLeft=" + location.evacuatingRemainingTicks()
+                        + ", combatRespiteTicksLeft=" + location.combatRespiteRemainingTicks()
+                        + ", combatKillsSinceLastRespite=" + location.combatKillsSinceLastRespite()
                 ),
                 false
             );
@@ -446,6 +448,17 @@ public final class HiveDebugCommands {
                 var typeId = BuiltInRegistries.ENTITY_TYPE.getKey(entry.getKey());
                 ctx.getSource()
                     .sendSuccess(() -> Component.literal("    " + typeId + " = " + entry.getValue()), false);
+            }
+        }
+        var identityReserves = location.localReserves().identity();
+        if (identityReserves.getCount() > 0) {
+            ctx.getSource()
+                .sendSuccess(() -> Component.literal("  identity reserves breakdown:"), false);
+            for (var type : identityReserves.getAvailableEntityTypes()) {
+                var typeId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+                var count = identityReserves.getCount(type);
+                ctx.getSource()
+                    .sendSuccess(() -> Component.literal("    " + typeId + " = " + count), false);
             }
         }
 

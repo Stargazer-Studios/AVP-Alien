@@ -27,7 +27,7 @@ import java.util.UUID;
  * whichever chunk she happens to be in when the timer expires.
  * <p>
  * State is in-memory only — a server stop or world reload starts every queen fresh. That's the design intent;
- * settlements are rare events (60 seconds each) and persistence isn't worth the complexity.
+ * settlements are rare events and persistence isn't worth the complexity.
  */
 public final class QueenSettlementDetector {
 

@@ -5,18 +5,22 @@ import com.alien.common.gameplay.block.entity.crusher.CrusherHeadBlockEntity;
 import com.alien.common.gameplay.block.entity.queen.QueenHeadBlockEntity;
 import com.alien.common.gameplay.block.entity.resin.node.ResinNodeBlockEntity;
 import com.alien.common.gameplay.block.entity.resin.vent.ResinVentBlockEntity;
+import com.alien.common.gameplay.block.entity.xenomorph.head.XenomorphHeadBlockEntity;
 import com.alien.common.registry.init.block.AberrantAlienResinBlocks;
 import com.alien.common.registry.init.block.AlienBlocks;
 import com.alien.common.registry.init.block.AlienResinBlocks;
 import com.alien.common.registry.init.block.IrradiatedAlienResinBlocks;
 import com.alien.common.registry.init.block.NetherAlienResinBlocks;
+import com.alien.common.registry.init.item.AlienXenomorphHeadItems;
 import com.blib.api.common.registry.v1.BLibHolder;
 import com.blib.api.common.registry.v1.BLibRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class AlienBlockEntityTypes {
 
@@ -73,6 +77,17 @@ public class AlienBlockEntityTypes {
             AlienBlocks.NETHER_CRUSHER_WALL_HEAD.get()
         )
     );
+
+    public static final BLibHolder<BlockEntityType<XenomorphHeadBlockEntity>> XENOMORPH_HEAD = create(
+        "xenomorph_head",
+        () -> BlockEntityType.Builder.of(XenomorphHeadBlockEntity::new, xenomorphHeadBlocks())
+    );
+
+    private static Block[] xenomorphHeadBlocks() {
+        return AlienXenomorphHeadItems.GENERIC_BLOCK_ENTRIES.stream()
+            .flatMap(entry -> Stream.of(entry.standingBlock().get(), entry.wallBlock().get()))
+            .toArray(Block[]::new);
+    }
 
     private static <T extends BlockEntity> BLibHolder<BlockEntityType<T>> create(
         String path,

@@ -3,6 +3,7 @@ package com.alien.fabric.data.lang.en_us.provider;
 import com.alien.common.registry.init.item.AlienArmorItems;
 import com.alien.common.registry.init.item.AlienItems;
 import com.alien.common.registry.init.item.AlienSpawnEggItems;
+import com.alien.common.registry.init.item.AlienXenomorphHeadItems;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider;
 import net.minecraft.world.item.Item;
 
@@ -71,22 +72,10 @@ public class EnUsItemProvider {
         addItem(builder, AlienItems.IRRADIATED_RESIN_BALL, "Irradiated Resin Ball");
         addItem(builder, AlienItems.IRRADIATED_CHITIN, "Irradiated Chitin");
         addItem(builder, AlienItems.PLATED_IRRADIATED_CHITIN, "Plated Irradiated Chitin");
-        addItem(builder, AlienItems.QUEEN_HEAD, "Queen Head");
-        addItem(builder, AlienItems.ABERRANT_QUEEN_HEAD, "Aberrant Queen Head");
-        addItem(builder, AlienItems.IRRADIATED_QUEEN_HEAD, "Irradiated Queen Head");
-        addItem(builder, AlienItems.NETHER_QUEEN_HEAD, "Nether Queen Head");
-        addItem(builder, AlienItems.QUEEN_HEAD_SHIELD, "Queen Head Shield");
-        addItem(builder, AlienItems.ABERRANT_QUEEN_HEAD_SHIELD, "Aberrant Queen Head Shield");
-        addItem(builder, AlienItems.IRRADIATED_QUEEN_HEAD_SHIELD, "Irradiated Queen Head Shield");
-        addItem(builder, AlienItems.NETHER_QUEEN_HEAD_SHIELD, "Nether Queen Head Shield");
-        addItem(builder, AlienItems.CRUSHER_HEAD, "Crusher Head");
-        addItem(builder, AlienItems.ABERRANT_CRUSHER_HEAD, "Aberrant Crusher Head");
-        addItem(builder, AlienItems.IRRADIATED_CRUSHER_HEAD, "Irradiated Crusher Head");
-        addItem(builder, AlienItems.NETHER_CRUSHER_HEAD, "Nether Crusher Head");
-        addItem(builder, AlienItems.CRUSHER_HEAD_SHIELD, "Crusher Head Shield");
-        addItem(builder, AlienItems.ABERRANT_CRUSHER_HEAD_SHIELD, "Aberrant Crusher Head Shield");
-        addItem(builder, AlienItems.IRRADIATED_CRUSHER_HEAD_SHIELD, "Irradiated Crusher Head Shield");
-        addItem(builder, AlienItems.NETHER_CRUSHER_HEAD_SHIELD, "Nether Crusher Head Shield");
+        AlienXenomorphHeadItems.ALL.forEach(entry -> {
+            addItem(builder, entry.head(), entry.displayName() + " Head");
+            addItem(builder, entry.headShield(), entry.displayName() + " Head Shield");
+        });
 
         // Spawn Egg Items
         addItem(builder, AlienSpawnEggItems.ABERRANT_ADOLESCENT_SPAWN_EGG, "Aberrant Adolescent Spawn Egg");

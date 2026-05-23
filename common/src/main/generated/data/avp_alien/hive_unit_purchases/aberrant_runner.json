@@ -1,5 +1,5 @@
 {
   "biomass": 40,
-  "population_biomass_cost_scale": 0.05,
-  "output_entity": "avp_alien:aberrant_runner"
+  "output_entity": "avp_alien:aberrant_runner",
+  "population_biomass_cost_scale": 0.05
 }

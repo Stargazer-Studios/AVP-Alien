@@ -33,24 +33,6 @@ public class RunnerAnimator extends AzEntityAnimator<Runner> {
         animationTrackContainer.add(
             AzAnimationTrack.builder(this, AzAlienAnimationUtil.BODY)
                 .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.HEAD)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.TAIL)
-                .setTransitionLength(5)
                 .build()
         );
     }
@@ -109,7 +91,7 @@ public class RunnerAnimator extends AzEntityAnimator<Runner> {
             animFunction = dispatcher::swim;
         } else if (isMoving) {
             if (isCrawling) {
-                animFunction = dispatcher::crawl;
+                animFunction = () -> dispatcher.crawl(AzAlienAnimationUtil.crawlAnimationSpeed(runner));
             } else if (runner.isMovingQuickly.get()) {
                 animFunction = dispatcher::run;
             } else {
@@ -127,11 +109,11 @@ public class RunnerAnimator extends AzEntityAnimator<Runner> {
         String animationName;
 
         if (attackType == Runner.BITE)
-            animationName = RunnerAnimationRefs.BITEATTACK_HEAD_ANIMATION_NAME;
+            animationName = RunnerAnimationRefs.FULL_ATTACK_BITE_ANIMATION_NAME;
         else if (attackType == Runner.CLAW)
-            animationName = RunnerAnimationRefs.ATTACKCLAWQUAD_RIGHTARM_ANIMATION_NAME;
+            animationName = RunnerAnimationRefs.FULL_ATTACK_ARM_ANIMATION_NAME;
         else if (attackType == Runner.TAIL_QUAD)
-            animationName = RunnerAnimationRefs.TAILATTACKQUAD_TAIL_ANIMATION_NAME;
+            animationName = RunnerAnimationRefs.FULL_ATTACK_TAIL_ANIMATION_NAME;
         else
             animationName = null;
 

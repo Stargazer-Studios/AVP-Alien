@@ -6,9 +6,17 @@ public class PraetorianAnimationRefs {
     // ## ANIMATION NAMES ##
     // #####################
 
-    public static final String ATTACKCLAW_RIGHTARM_ANIMATION_NAME = "attackclaw.rightarm";
+    public static final String IDLE_ANIMATION_NAME = "idle";
 
-    public static final String ATTACKBITE_HEAD_ANIMATION_NAME = "attackbite.head";
+    public static final String WALK_ANIMATION_NAME = "walk";
 
-    public static final String ATTACKTAIL_TAIL_ANIMATION_NAME = "attacktail.tail";
+    public static final String RUN_ANIMATION_NAME = "run";
+
+    public static final String SWIM_ANIMATION_NAME = "swim";
+
+    public static final String FULL_ATTACK_CLAW_ANIMATION_NAME = "fullattackclaw";
+
+    public static final String FULL_ATTACK_BITE_ANIMATION_NAME = "fullattackbite";
+
+    public static final String FULL_ATTACK_TAIL_ANIMATION_NAME = "fullattacktail";
 }

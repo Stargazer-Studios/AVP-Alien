@@ -1,11 +1,16 @@
 package com.alien.common.registry.init.item;
 
 import com.alien.Alien;
+import com.alien.common.gameplay.item.AgileXenomorphHeadShieldItem;
 import com.alien.common.gameplay.item.CrusherHeadItem;
 import com.alien.common.gameplay.item.CrusherHeadShieldItem;
 import com.alien.common.gameplay.item.PoisonJellyItem;
 import com.alien.common.gameplay.item.QueenHeadItem;
 import com.alien.common.gameplay.item.QueenHeadShieldItem;
+import com.alien.common.gameplay.item.SpitterHeadShieldItem;
+import com.alien.common.gameplay.item.XenomorphHeadItem;
+import com.alien.common.gameplay.item.XenomorphHeadShieldItem;
+import com.alien.common.model.alien.variant.AlienVariant;
 import com.alien.common.registry.init.block.AlienBlocks;
 import com.alien.common.registry.key.AlienJukeboxSongKeys;
 import com.blib.api.common.registry.v1.BLibHolder;
@@ -15,6 +20,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.DiscFragmentItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
+import net.minecraft.world.level.block.Block;
 
 import java.util.function.Supplier;
 
@@ -204,6 +210,41 @@ public class AlienItems {
         return create(name, new Item.Properties());
     }
 
+    static BLibHolder<Item> createXenomorphHead(
+        String name,
+        Supplier<? extends Block> standingBlock,
+        Supplier<? extends Block> wallBlock,
+        boolean fireResistant
+    ) {
+        return create(name, () -> new XenomorphHeadItem(
+            standingBlock.get(),
+            wallBlock.get(),
+            xenomorphHeadProperties(fireResistant)
+        ));
+    }
+
+    static BLibHolder<Item> createXenomorphHeadShield(String name, boolean fireResistant) {
+        return create(name, () -> new XenomorphHeadShieldItem(xenomorphHeadShieldProperties(fireResistant)));
+    }
+
+    static BLibHolder<Item> createAgileXenomorphHeadShield(String name, boolean fireResistant) {
+        return create(name, () -> new AgileXenomorphHeadShieldItem(xenomorphHeadShieldProperties(fireResistant)));
+    }
+
+    static BLibHolder<Item> createSpitterHeadShield(String name, AlienVariant variant, boolean fireResistant) {
+        return create(name, () -> new SpitterHeadShieldItem(variant, xenomorphHeadShieldProperties(fireResistant)));
+    }
+
+    private static Item.Properties xenomorphHeadProperties(boolean fireResistant) {
+        var properties = new Item.Properties().stacksTo(1);
+        return fireResistant ? properties.fireResistant() : properties;
+    }
+
+    private static Item.Properties xenomorphHeadShieldProperties(boolean fireResistant) {
+        var properties = new Item.Properties().stacksTo(1).durability(512);
+        return fireResistant ? properties.fireResistant() : properties;
+    }
+
     private static BLibHolder<Item> create(String name, Item.Properties properties) {
         return create(name, () -> new Item(properties));
     }
@@ -213,6 +254,7 @@ public class AlienItems {
     }
 
     public static void initialize() {
+        AlienXenomorphHeadItems.initialize();
         REGISTRY.registerAll();
         DECORATED_POT_PATTERN_REGISTRY.register("ovoid_pottery_pattern", OVOID_POTTERY_SHERD);
         DECORATED_POT_PATTERN_REGISTRY.register("parasite_pottery_pattern", PARASITE_POTTERY_SHERD);

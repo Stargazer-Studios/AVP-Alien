@@ -26,6 +26,10 @@ public class VentSensors {
                 return false;
             }
 
+            if (xenomorph.isInWater() || xenomorph.isUnderWater()) {
+                return false;
+            }
+
             var ticksSinceLastVent = xenomorph.tickCount - ventBuilder.getVentData().getLastVentCreationTick();
 
             if (ticksSinceLastVent < VENT_COOLDOWN_IN_TICKS) {

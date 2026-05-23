@@ -23,16 +23,19 @@ import org.jetbrains.annotations.Nullable;
 public class Praetorian extends Xenomorph implements GOAPUser<Praetorian> {
 
     public static final AttackType CLAW = AttackType.builder("praetorian_claw")
+        .requiresAnyArm()
         .defaultDurationInTicks(10)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType BITE = AttackType.builder("praetorian_bite")
+        .requiresHead()
         .defaultDurationInTicks(8)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType TAIL = AttackType.builder("praetorian_tail")
+        .requiresTail()
         .defaultDurationInTicks(12)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();

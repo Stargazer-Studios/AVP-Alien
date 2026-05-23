@@ -8,7 +8,10 @@ import com.alien.common.gameplay.block.jelly.JellyBlock;
 import com.alien.common.gameplay.block.queen.QueenHeadBlock;
 import com.alien.common.gameplay.block.queen.QueenHeadVariant;
 import com.alien.common.gameplay.block.queen.QueenWallHeadBlock;
+import com.alien.common.gameplay.block.xenomorph.head.XenomorphHeadBlock;
+import com.alien.common.gameplay.block.xenomorph.head.XenomorphWallHeadBlock;
 import com.alien.common.registry.init.block.property.AlienBlockProperties;
+import com.alien.common.registry.init.item.AlienXenomorphHeadItems;
 import com.blib.api.common.block.v1.BlockPropertyBuilder;
 import com.blib.api.common.registry.v1.BLibHolder;
 import com.blib.api.common.registry.v1.BLibRegistry;
@@ -140,6 +143,22 @@ public class AlienBlocks {
             .noOcclusion();
     }
 
+    public static BLibHolder<XenomorphHeadBlock> createXenomorphHeadBlock(String path) {
+        return create(path, () -> new XenomorphHeadBlock(path, xenomorphHeadProperties()));
+    }
+
+    public static BLibHolder<XenomorphWallHeadBlock> createXenomorphWallHeadBlock(String path, String itemPath) {
+        return create(path, () -> new XenomorphWallHeadBlock(itemPath, xenomorphHeadProperties()));
+    }
+
+    private static BlockBehaviour.Properties xenomorphHeadProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.COLOR_GRAY)
+            .strength(1.0F)
+            .sound(SoundType.BONE_BLOCK)
+            .noOcclusion();
+    }
+
     private static BLibHolder<Block> create(String path, BlockPropertyBuilder blockPropertyBuilder) {
         return create(path, () -> new Block(blockPropertyBuilder.build()));
     }
@@ -149,6 +168,7 @@ public class AlienBlocks {
     }
 
     public static void initialize() {
+        AlienXenomorphHeadItems.initialize();
         REGISTRY.registerAll();
     }
 }

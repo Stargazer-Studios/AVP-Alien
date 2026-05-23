@@ -25,8 +25,8 @@ import java.util.ArrayList;
  * Grants are capped by claimed chunk count; overflow is discarded (the accumulator is still subtracted so the same tick
  * budget isn't re-banked into the next minute).
  * <p>
- * Producers in the location's persisted known-member index and local reserves contribute, so persistent royal/harbinger
- * entities keep producing after their chunks unload.
+ * Producers are currently loaded location members plus local reserves. Persisted unloaded UUIDs are intentionally
+ * ignored because they can be stale.
  */
 public final class JellyProduction {
 
@@ -93,12 +93,12 @@ public final class JellyProduction {
         net.minecraft.tags.TagKey<net.minecraft.world.entity.EntityType<?>> tag
     ) {
         var count = 0;
-        for (var entry : location.knownMembersByType().entrySet()) {
+        for (var entry : location.loadedMembersByType().entrySet()) {
             if (entry.getKey().is(tag)) {
                 count += entry.getValue().size();
             }
         }
-        count += location.localReserves().getCountMatching(type -> type.is(tag));
+        count += location.localReserves().getReliableCountMatching(type -> type.is(tag));
         return count;
     }
 

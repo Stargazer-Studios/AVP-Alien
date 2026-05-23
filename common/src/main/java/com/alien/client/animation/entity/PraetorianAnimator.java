@@ -33,24 +33,6 @@ public class PraetorianAnimator extends AzEntityAnimator<Praetorian> {
         animationTrackContainer.add(
             AzAnimationTrack.builder(this, AzAlienAnimationUtil.BODY)
                 .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.HEAD)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.TAIL)
-                .setTransitionLength(5)
                 .build()
         );
     }
@@ -120,11 +102,11 @@ public class PraetorianAnimator extends AzEntityAnimator<Praetorian> {
         String animationName;
 
         if (attackType == Praetorian.BITE) {
-            animationName = PraetorianAnimationRefs.ATTACKBITE_HEAD_ANIMATION_NAME;
+            animationName = PraetorianAnimationRefs.FULL_ATTACK_BITE_ANIMATION_NAME;
         } else if (attackType == Praetorian.CLAW) {
-            animationName = PraetorianAnimationRefs.ATTACKCLAW_RIGHTARM_ANIMATION_NAME;
+            animationName = PraetorianAnimationRefs.FULL_ATTACK_CLAW_ANIMATION_NAME;
         } else if (attackType == Praetorian.TAIL) {
-            animationName = PraetorianAnimationRefs.ATTACKTAIL_TAIL_ANIMATION_NAME;
+            animationName = PraetorianAnimationRefs.FULL_ATTACK_TAIL_ANIMATION_NAME;
         } else {
             animationName = null;
         }

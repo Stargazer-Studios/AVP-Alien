@@ -5,7 +5,6 @@ import com.alien.common.gameplay.entity.living.alien.ovipositor.Ovipositor;
 import com.alien.common.gameplay.hive.location.HiveLocation;
 import com.alien.common.gameplay.hive.location.HiveLocationRegistry;
 import com.alien.common.registry.init.AlienEntityTypes;
-import com.alien.common.registry.tag.AlienEntityTypeTags;
 import com.blib.api.common.entity.v1.EntityUtil;
 import com.blib.api.common.nbt.v1.model.NBTSerializable;
 import com.blib.api.common.time.v1.Cooldown;
@@ -109,10 +108,9 @@ public class OvipositorManager implements NBTSerializable {
     private boolean canCreateOvipositor() {
         return queen.getTarget() == null
             && AlienVariantTypes.getFor(queen.getVariant()).canReproduce()
-            && !queen.isPoisoned()
             && !ovipositorCreationCooldown.isActive()
             && isStandingOnVariantResin()
-            && hasEnoughLocalSupport()
+            && hasSuitableHiveLocation()
             && canOvipositorFit();
     }
 
@@ -123,10 +121,9 @@ public class OvipositorManager implements NBTSerializable {
     }
 
     /**
-     * Hive: the queen needs to be standing inside an alive, calm hive location with at least 3 loaded xenomorphs in its
-     * territory.
+     * Hive: the queen needs to be standing near the center of an alive, calm hive location.
      */
-    private boolean hasEnoughLocalSupport() {
+    private boolean hasSuitableHiveLocation() {
         var location = currentLocation();
         if (location == null || !location.isAlive()) {
             return false;
@@ -138,13 +135,7 @@ public class OvipositorManager implements NBTSerializable {
         if (bossBar != null && bossBar.isAngry()) {
             return false;
         }
-        var loadedXenoCount = location.loadedMembersByType()
-            .entrySet()
-            .stream()
-            .filter(entry -> entry.getKey().is(AlienEntityTypeTags.XENOMORPHS))
-            .mapToInt(entry -> entry.getValue().size())
-            .sum();
-        return loadedXenoCount > 2;
+        return true;
     }
 
     private boolean tryPayCreationCost() {

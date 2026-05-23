@@ -1,6 +1,7 @@
 package com.alien.common.gameplay.entity.projectile;
 
 import com.alien.common.gameplay.entity.living.alien.Alien;
+import com.alien.common.model.alien.variant.AlienVariant;
 import com.alien.common.registry.init.AlienEntityTypes;
 import com.alien.common.registry.init.AlienParticleTypes;
 import com.alien.common.registry.key.AlienDamageTypeKeys;
@@ -43,9 +44,18 @@ public class AcidSpit extends ThrowableProjectile {
         super(AlienEntityTypes.ACID_SPIT.get(), owner, level);
 
         if (owner instanceof Alien alien) {
-            entityData.set(IS_NETHER_AFFLICTED, alien.isNetherAfflicted());
-            entityData.set(IS_IRRADIATED, alien.isIrradiated());
+            setVariant(alien.getVariant());
         }
+    }
+
+    public AcidSpit(LivingEntity owner, Level level, AlienVariant variant) {
+        this(owner, level);
+        setVariant(variant);
+    }
+
+    public void setVariant(AlienVariant variant) {
+        entityData.set(IS_NETHER_AFFLICTED, variant == AlienVariant.NETHER);
+        entityData.set(IS_IRRADIATED, variant == AlienVariant.IRRADIATED);
     }
 
     @Override

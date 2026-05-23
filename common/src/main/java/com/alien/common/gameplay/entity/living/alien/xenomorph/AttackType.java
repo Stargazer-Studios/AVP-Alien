@@ -7,7 +7,9 @@ import net.minecraft.sounds.SoundEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -25,7 +27,8 @@ public record AttackType(
     @Nullable Supplier<SoundEvent> sound,
     DamageApplicator damageApplicator,
     Supplier<? extends AttackExecutor> executorFactory,
-    Predicate<Xenomorph> activationCondition
+    Predicate<Xenomorph> activationCondition,
+    Set<XenomorphAttackLimbRequirement> limbRequirements
 ) {
 
     private static final Map<String, AttackType> REGISTRY = new ConcurrentHashMap<>();
@@ -36,6 +39,7 @@ public record AttackType(
         .build();
 
     public AttackType {
+        limbRequirements = Set.copyOf(limbRequirements);
         REGISTRY.put(id, this);
     }
 
@@ -45,6 +49,20 @@ public record AttackType(
 
     public boolean isNone() {
         return this == NONE;
+    }
+
+    public boolean canUse(Xenomorph xenomorph) {
+        if (!activationCondition.test(xenomorph)) {
+            return false;
+        }
+
+        for (var requirement : limbRequirements) {
+            if (!requirement.isSatisfiedBy(xenomorph)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static Builder builder(String id) {
@@ -70,6 +88,8 @@ public record AttackType(
         private Supplier<? extends AttackExecutor> executorFactory = AttackExecutor.DEFAULT_FACTORY;
 
         private Predicate<Xenomorph> activationCondition = xenomorph -> true;
+
+        private final EnumSet<XenomorphAttackLimbRequirement> limbRequirements = EnumSet.noneOf(XenomorphAttackLimbRequirement.class);
 
         private Builder(String id) {
             this.id = id;
@@ -115,6 +135,31 @@ public record AttackType(
             return this;
         }
 
+        public Builder requiresHead() {
+            return requires(XenomorphAttackLimbRequirement.HEAD);
+        }
+
+        public Builder requiresTail() {
+            return requires(XenomorphAttackLimbRequirement.TAIL);
+        }
+
+        public Builder requiresAnyArm() {
+            return requires(XenomorphAttackLimbRequirement.ANY_ARM);
+        }
+
+        public Builder requiresBothArms() {
+            return requires(XenomorphAttackLimbRequirement.BOTH_ARMS);
+        }
+
+        public Builder requiresAllLegs() {
+            return requires(XenomorphAttackLimbRequirement.ALL_LEGS);
+        }
+
+        private Builder requires(XenomorphAttackLimbRequirement limbRequirement) {
+            limbRequirements.add(limbRequirement);
+            return this;
+        }
+
         public AttackType build() {
             return new AttackType(
                 id,
@@ -125,7 +170,8 @@ public record AttackType(
                 sound,
                 damageApplicator,
                 executorFactory,
-                activationCondition
+                activationCondition,
+                limbRequirements
             );
         }
     }

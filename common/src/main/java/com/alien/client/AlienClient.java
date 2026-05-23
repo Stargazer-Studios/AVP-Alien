@@ -15,6 +15,7 @@ import com.alien.client.render.armor.PlatedIrradiatedChitinArmorRenderer;
 import com.alien.client.render.armor.PlatedNetherChitinArmorRenderer;
 import com.alien.client.render.block.CrusherHeadBlockEntityRenderer;
 import com.alien.client.render.block.QueenHeadBlockEntityRenderer;
+import com.alien.client.render.block.XenomorphHeadBlockEntityRenderer;
 import com.alien.client.render.entity.AcidRenderer;
 import com.alien.client.render.entity.AcidSpitRenderer;
 import com.alien.client.render.entity.AdolescentRenderer;
@@ -54,7 +55,7 @@ import com.alien.common.registry.init.block.AlienResinBlocks;
 import com.alien.common.registry.init.block.IrradiatedAlienResinBlocks;
 import com.alien.common.registry.init.block.NetherAlienResinBlocks;
 import com.alien.common.registry.init.item.AlienArmorItems;
-import com.alien.common.registry.init.item.AlienItems;
+import com.alien.common.registry.init.item.AlienXenomorphHeadItems;
 import com.alien.compatibility.blib_engine.BLibEngine;
 import com.blib.api.client.mod.v1.BLibClientMod;
 import com.blib.api.common.registry.v1.BLibHolder;
@@ -373,29 +374,10 @@ public class AlienClient {
     }
 
     private static void registerItemRenderers() {
-        // Queen heads — trophy + shield variants. Trophies have no blocking transforms; the shared
-        // blocking predicate is harmless for them since the renderer short-circuits when there are no
-        // blocking transforms. Shields use the same predicate for actual raise-to-block behavior.
-        registerAsset(AlienItems.QUEEN_HEAD, "queen_head");
-        registerAsset(AlienItems.ABERRANT_QUEEN_HEAD, "aberrant_queen_head");
-        registerAsset(AlienItems.IRRADIATED_QUEEN_HEAD, "irradiated_queen_head");
-        registerAsset(AlienItems.NETHER_QUEEN_HEAD, "nether_queen_head");
-
-        registerAsset(AlienItems.QUEEN_HEAD_SHIELD, "queen_head_shield");
-        registerAsset(AlienItems.ABERRANT_QUEEN_HEAD_SHIELD, "aberrant_queen_head_shield");
-        registerAsset(AlienItems.IRRADIATED_QUEEN_HEAD_SHIELD, "irradiated_queen_head_shield");
-        registerAsset(AlienItems.NETHER_QUEEN_HEAD_SHIELD, "nether_queen_head_shield");
-
-        // Crusher heads — same shape, sourced from the crusher geo + per-tint textures.
-        registerAsset(AlienItems.CRUSHER_HEAD, "crusher_head");
-        registerAsset(AlienItems.ABERRANT_CRUSHER_HEAD, "aberrant_crusher_head");
-        registerAsset(AlienItems.IRRADIATED_CRUSHER_HEAD, "irradiated_crusher_head");
-        registerAsset(AlienItems.NETHER_CRUSHER_HEAD, "nether_crusher_head");
-
-        registerAsset(AlienItems.CRUSHER_HEAD_SHIELD, "crusher_head_shield");
-        registerAsset(AlienItems.ABERRANT_CRUSHER_HEAD_SHIELD, "aberrant_crusher_head_shield");
-        registerAsset(AlienItems.IRRADIATED_CRUSHER_HEAD_SHIELD, "irradiated_crusher_head_shield");
-        registerAsset(AlienItems.NETHER_CRUSHER_HEAD_SHIELD, "nether_crusher_head_shield");
+        AlienXenomorphHeadItems.ALL.forEach(entry -> {
+            registerAsset(entry.head(), entry.itemPath());
+            registerAsset(entry.headShield(), entry.shieldItemPath());
+        });
     }
 
     private static void registerAsset(BLibHolder<Item> holder, String configPath) {
@@ -412,6 +394,11 @@ public class AlienClient {
             .registerBlockEntityRenderer(
                 AlienBlockEntityTypes.CRUSHER_HEAD,
                 ctx -> new CrusherHeadBlockEntityRenderer()
+            );
+        MOD.registries()
+            .registerBlockEntityRenderer(
+                AlienBlockEntityTypes.XENOMORPH_HEAD,
+                ctx -> new XenomorphHeadBlockEntityRenderer()
             );
     }
 

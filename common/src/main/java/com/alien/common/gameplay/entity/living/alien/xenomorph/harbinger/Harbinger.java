@@ -33,16 +33,19 @@ public class Harbinger extends Xenomorph implements GOAPUser<Harbinger> {
     private static final double FRENZY_AURA_RADIUS_BLOCKS = 16.0;
 
     public static final AttackType CLAW = AttackType.builder("harbinger_claw")
+        .requiresAnyArm()
         .defaultDurationInTicks(10)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType BITE = AttackType.builder("harbinger_bite")
+        .requiresHead()
         .defaultDurationInTicks(8)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType TAIL = AttackType.builder("harbinger_tail")
+        .requiresTail()
         .defaultDurationInTicks(12)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();

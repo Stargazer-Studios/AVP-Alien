@@ -38,7 +38,7 @@ public class TriggeredAttackGOAP {
                     return false;
                 }
 
-                return attack.activationCondition().test(xenomorph);
+                return xenomorph.canUseAttack(attack);
             }
         );
 
@@ -84,7 +84,7 @@ public class TriggeredAttackGOAP {
             return Action.Signal.ABORT;
         }
 
-        if (attackTargetOption.isNone() || !xenomorph.getCooldownTracker().isReady(attack)) {
+        if (attackTargetOption.isNone() || !xenomorph.getCooldownTracker().isReady(attack) || !xenomorph.canUseAttack(attack)) {
             return Action.Signal.ABORT;
         }
 

@@ -3,9 +3,9 @@ package com.alien.common.gameplay.entity.living.alien;
 import com.alien.AlienResources;
 import com.alien.common.gameplay.entity.living.alien.xenomorph.Xenomorph;
 import com.alien.common.gameplay.hive.faction.HiveMemberLocationResolver;
-import com.alien.common.model.lifecycle.growth.FormSizeScale;
+import com.alien.common.model.lifecycle.growth.MoltingProfile;
 import com.alien.common.model.lifecycle.growth.MoltPhase;
-import com.alien.common.registry.FormSizeScaleRegistry;
+import com.alien.common.registry.MoltingProfileRegistry;
 import com.alien.common.util.AlienPredicates;
 import com.blib.api.common.nbt.v1.model.NBTSerializable;
 import net.minecraft.nbt.CompoundTag;
@@ -17,13 +17,13 @@ import org.jetbrains.annotations.Nullable;
 
 public class MoltingManager implements NBTSerializable {
 
-    public static final String FORM_SCALE_PHASE_INDEX_TAG = "formScalePhaseIndex";
+    public static final String MOLT_PHASE_INDEX_TAG = "moltPhaseIndex";
 
-    public static final String FORM_SCALE_PHASE_TICKS_TAG = "formScalePhaseTicks";
+    public static final String MOLT_PHASE_TICKS_TAG = "moltPhaseTicks";
 
-    public static final String FORM_SCALE_TARGET_REACHED_TICKS_TAG = "formScaleTargetReachedTicks";
+    public static final String MOLT_TARGET_SCALE_REACHED_TICKS_TAG = "moltTargetScaleReachedTicks";
 
-    private static final ResourceLocation FORM_SIZE_SCALE_MODIFIER = AlienResources.location("form_size_scale");
+    private static final ResourceLocation MOLTING_PROFILE_MODIFIER = AlienResources.location("molting_profile");
 
     private static final int MOLT_FADE_TICKS = 20;
 
@@ -37,16 +37,11 @@ public class MoltingManager implements NBTSerializable {
 
     private int targetScaleReachedTicks;
 
-    private @Nullable FormSizeScale cachedData;
-
-    private boolean dataCacheDirty;
-
     public MoltingManager(Alien entity) {
         this.entity = entity;
         this.phaseIndex = 0;
         this.phaseElapsedTicks = 0;
         this.targetScaleReachedTicks = Integer.MAX_VALUE;
-        this.dataCacheDirty = true;
 
         var data = getData();
 
@@ -265,7 +260,7 @@ public class MoltingManager implements NBTSerializable {
         return 1.0F;
     }
 
-    private void applyScaleModifier(FormSizeScale data) {
+    private void applyScaleModifier(MoltingProfile data) {
         var scaleInstance = entity.getAttribute(Attributes.SCALE);
 
         if (scaleInstance == null) {
@@ -275,11 +270,11 @@ public class MoltingManager implements NBTSerializable {
         var currentScale = getCurrentScale();
         var modifierValue = currentScale - 1.0;
 
-        scaleInstance.removeModifier(FORM_SIZE_SCALE_MODIFIER);
+        scaleInstance.removeModifier(MOLTING_PROFILE_MODIFIER);
 
         if (Math.abs(modifierValue) > 0.001) {
             scaleInstance.addTransientModifier(
-                new AttributeModifier(FORM_SIZE_SCALE_MODIFIER, modifierValue, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
+                new AttributeModifier(MOLTING_PROFILE_MODIFIER, modifierValue, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
             );
         }
     }
@@ -290,33 +285,28 @@ public class MoltingManager implements NBTSerializable {
         }
     }
 
-    private @Nullable FormSizeScale getData() {
-        if (dataCacheDirty) {
-            cachedData = FormSizeScaleRegistry.get(entity.getType());
-            dataCacheDirty = false;
-        }
-
-        return cachedData;
+    private @Nullable MoltingProfile getData() {
+        return MoltingProfileRegistry.get(entity.getType());
     }
 
     @Override
     public void load(CompoundTag compoundTag) {
-        if (compoundTag.contains(FORM_SCALE_PHASE_INDEX_TAG)) {
-            this.phaseIndex = compoundTag.getInt(FORM_SCALE_PHASE_INDEX_TAG);
+        if (compoundTag.contains(MOLT_PHASE_INDEX_TAG)) {
+            this.phaseIndex = compoundTag.getInt(MOLT_PHASE_INDEX_TAG);
         }
 
-        if (compoundTag.contains(FORM_SCALE_PHASE_TICKS_TAG)) {
-            this.phaseElapsedTicks = compoundTag.getInt(FORM_SCALE_PHASE_TICKS_TAG);
+        if (compoundTag.contains(MOLT_PHASE_TICKS_TAG)) {
+            this.phaseElapsedTicks = compoundTag.getInt(MOLT_PHASE_TICKS_TAG);
         }
 
-        if (compoundTag.contains(FORM_SCALE_TARGET_REACHED_TICKS_TAG)) {
-            this.targetScaleReachedTicks = compoundTag.getInt(FORM_SCALE_TARGET_REACHED_TICKS_TAG);
+        if (compoundTag.contains(MOLT_TARGET_SCALE_REACHED_TICKS_TAG)) {
+            this.targetScaleReachedTicks = compoundTag.getInt(MOLT_TARGET_SCALE_REACHED_TICKS_TAG);
         }
 
         var data = getData();
 
         if (data != null) {
-            if (!compoundTag.contains(FORM_SCALE_TARGET_REACHED_TICKS_TAG)) {
+            if (!compoundTag.contains(MOLT_TARGET_SCALE_REACHED_TICKS_TAG)) {
                 this.targetScaleReachedTicks = data.isFullyMatured(phaseIndex) ? Integer.MAX_VALUE : 0;
             }
 
@@ -326,8 +316,8 @@ public class MoltingManager implements NBTSerializable {
 
     @Override
     public void save(CompoundTag compoundTag) {
-        compoundTag.putInt(FORM_SCALE_PHASE_INDEX_TAG, phaseIndex);
-        compoundTag.putInt(FORM_SCALE_PHASE_TICKS_TAG, phaseElapsedTicks);
-        compoundTag.putInt(FORM_SCALE_TARGET_REACHED_TICKS_TAG, targetScaleReachedTicks);
+        compoundTag.putInt(MOLT_PHASE_INDEX_TAG, phaseIndex);
+        compoundTag.putInt(MOLT_PHASE_TICKS_TAG, phaseElapsedTicks);
+        compoundTag.putInt(MOLT_TARGET_SCALE_REACHED_TICKS_TAG, targetScaleReachedTicks);
     }
 }

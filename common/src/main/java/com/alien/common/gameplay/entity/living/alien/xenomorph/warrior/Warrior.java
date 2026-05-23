@@ -23,16 +23,19 @@ import org.jetbrains.annotations.Nullable;
 public class Warrior extends Xenomorph implements GOAPUser<Warrior> {
 
     public static final AttackType CLAW = AttackType.builder("warrior_claw")
+        .requiresAnyArm()
         .defaultDurationInTicks(10)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType BITE = AttackType.builder("warrior_bite")
+        .requiresHead()
         .defaultDurationInTicks(8)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType TAIL = AttackType.builder("warrior_tail")
+        .requiresTail()
         .defaultDurationInTicks(12)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();

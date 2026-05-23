@@ -7,9 +7,13 @@ import com.blib.api.common.codec.v1.BLibCodecs;
 import com.blib.api.common.entity.v1.EntityReserves;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -23,12 +27,17 @@ public final class HiveLocationReserves {
 
     private static final String NBT_KEY = "EntityReserves";
 
+    private static final String NBT_IDENTITY_KEY = "IdentityEntityReserves";
+
     private final EntityReserves underlying;
+
+    private final HiveIdentityReserves identity;
 
     private final Supplier<AlienVariant> variantSupplier;
 
     public HiveLocationReserves(Supplier<AlienVariant> variantSupplier) {
         this.underlying = new EntityReserves();
+        this.identity = new HiveIdentityReserves();
         this.variantSupplier = variantSupplier;
     }
 
@@ -60,6 +69,28 @@ public final class HiveLocationReserves {
      */
     public boolean addReturningMember(EntityType<?> type, int count) {
         return tryAdd(type, count);
+    }
+
+    /**
+     * Returns a persistent already-owned member to this location while preserving its entity NBT and UUID.
+     */
+    public boolean addReturningIdentityMember(Entity entity) {
+        if (!accepts(entity.getType())) {
+            var required = variantSupplier.get();
+            Alien.LOGGER.warn(
+                "Hive: rejected identity reserve add of {} ({}) because it does not match location variant {}.",
+                entity.getUUID(),
+                BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()),
+                required
+            );
+            return false;
+        }
+
+        var entry = HiveIdentityReserveEntry.capture(entity);
+        if (entry == null) {
+            return false;
+        }
+        return identity.add(entry);
     }
 
     /**
@@ -96,6 +127,41 @@ public final class HiveLocationReserves {
             .toList();
     }
 
+    public int getReliableCount(EntityType<?> type) {
+        return getCount(type) + identity.getCount(type);
+    }
+
+    public int getReliableCountMatching(Predicate<EntityType<?>> predicate) {
+        return getCountMatching(predicate) + identity.getCountMatching(type -> accepts(type) && predicate.test(type));
+    }
+
+    public int getReliableCount() {
+        return getCount() + identity.getCountMatching(this::accepts);
+    }
+
+    public List<EntityType<?>> getReliableAvailableEntityTypes() {
+        var types = new LinkedHashSet<EntityType<?>>();
+        types.addAll(getAvailableEntityTypes());
+        for (var type : identity.getAvailableEntityTypes()) {
+            if (accepts(type)) {
+                types.add(type);
+            }
+        }
+        return List.copyOf(types);
+    }
+
+    public @Nullable HiveIdentityReserveEntry removeIdentity(EntityType<?> type) {
+        return identity.removeFirst(type);
+    }
+
+    public void restoreIdentity(HiveIdentityReserveEntry entry) {
+        identity.add(entry);
+    }
+
+    public HiveIdentityReserves identity() {
+        return identity;
+    }
+
     /** Direct access for callers that need to interoperate with raw BLib APIs. */
     public EntityReserves underlying() {
         return underlying;
@@ -103,35 +169,44 @@ public final class HiveLocationReserves {
 
     public void save(CompoundTag tag) {
         tag.put(NBT_KEY, EntityReserves.CODEC.encode(BLibCodecs.Schema.NBT, underlying));
+        tag.put(NBT_IDENTITY_KEY, identity.save());
     }
 
     public void load(CompoundTag tag) {
-        if (!tag.contains(NBT_KEY)) {
-            return;
+        if (tag.contains(NBT_KEY)) {
+            EntityReserves.CODEC.decode(BLibCodecs.Schema.NBT, tag.getCompound(NBT_KEY))
+                .inspectErr(failure -> Alien.LOGGER.error("Failed to load HiveLocationReserves: {}", failure))
+                .ifOk(loaded -> {
+                    var rejected = 0;
+                    for (var entry : loaded.getBackingMap().entrySet()) {
+                        var count = Math.max(0, entry.getValue());
+                        if (count <= 0) {
+                            continue;
+                        }
+                        if (accepts(entry.getKey())) {
+                            underlying.add(entry.getKey(), count);
+                        } else {
+                            rejected += count;
+                        }
+                    }
+                    if (rejected > 0) {
+                        Alien.LOGGER.warn(
+                            "Hive: discarded {} variant-mismatched local reserve entries while loading a hive location.",
+                            rejected
+                        );
+                    }
+                });
         }
 
-        EntityReserves.CODEC.decode(BLibCodecs.Schema.NBT, tag.getCompound(NBT_KEY))
-            .inspectErr(failure -> Alien.LOGGER.error("Failed to load HiveLocationReserves: {}", failure))
-            .ifOk(loaded -> {
-                var rejected = 0;
-                for (var entry : loaded.getBackingMap().entrySet()) {
-                    var count = Math.max(0, entry.getValue());
-                    if (count <= 0) {
-                        continue;
-                    }
-                    if (accepts(entry.getKey())) {
-                        underlying.add(entry.getKey(), count);
-                    } else {
-                        rejected += count;
-                    }
-                }
-                if (rejected > 0) {
-                    Alien.LOGGER.warn(
-                        "Hive: discarded {} variant-mismatched local reserve entries while loading a hive location.",
-                        rejected
-                    );
-                }
-            });
+        if (tag.contains(NBT_IDENTITY_KEY, Tag.TAG_LIST)) {
+            var rejectedIdentity = identity.load(HiveIdentityReserves.listTag(tag, NBT_IDENTITY_KEY), this::accepts);
+            if (rejectedIdentity > 0) {
+                Alien.LOGGER.warn(
+                    "Hive: discarded {} invalid or variant-mismatched identity reserve entries while loading a hive location.",
+                    rejectedIdentity
+                );
+            }
+        }
     }
 
     public boolean accepts(EntityType<?> type) {
@@ -152,6 +227,7 @@ public final class HiveLocationReserves {
             underlying.add(entry.getKey(), -count);
             removed += count;
         }
+        removed += identity.removeIf(type -> !FactionVariantPolicy.variantMatches(type, required));
         return removed;
     }
 }

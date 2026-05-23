@@ -4,6 +4,7 @@ import com.alien.common.gameplay.entity.living.alien.Alien;
 import com.alien.common.gameplay.entity.living.alien.AlienSpawning;
 import com.alien.common.gameplay.entity.living.alien.xenomorph.queen.Queen;
 import com.alien.common.gameplay.hive.economy.CastePopulation;
+import com.alien.common.gameplay.hive.faction.LocationMembership;
 import com.alien.common.gameplay.hive.location.HiveLocation;
 import com.alien.common.gameplay.hive.location.HiveLocationRegistry;
 import com.alien.common.gameplay.hive.location.HiveLocationSpacing;
@@ -37,6 +38,9 @@ public final class HiveLoadedSpawner {
 
         for (var location : HiveLocationRegistry.INSTANCE.all()) {
             if (!location.isAlive()) {
+                continue;
+            }
+            if (location.isInCombatRespite()) {
                 continue;
             }
 
@@ -107,6 +111,15 @@ public final class HiveLoadedSpawner {
             return null;
         }
 
+        var restored = trySpawnIdentityReserve(level, location, type, pos);
+        if (restored != null) {
+            return restored;
+        }
+
+        if (!location.localReserves().canSpawn(type)) {
+            return null;
+        }
+
         var spawnType = type.is(AlienEntityTypeTags.QUEENS) ? MobSpawnType.MOB_SUMMONED : MobSpawnType.NATURAL;
         var entity = type.spawn(level, pos, spawnType);
         if (entity instanceof Queen queen && location.founderId() == null) {
@@ -115,12 +128,61 @@ public final class HiveLoadedSpawner {
         return entity;
     }
 
+    private static @Nullable Entity trySpawnIdentityReserve(
+        ServerLevel level,
+        HiveLocation location,
+        EntityType<?> type,
+        BlockPos pos
+    ) {
+        var entry = location.localReserves().removeIdentity(type);
+        if (entry == null) {
+            return null;
+        }
+
+        if (level.getEntity(entry.uuid()) != null) {
+            com.alien.Alien.LOGGER.warn(
+                "Hive: discarded duplicate identity reserve {} ({}) because an entity with that UUID is already loaded.",
+                entry.uuid(),
+                net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(type)
+            );
+            return null;
+        }
+
+        var entity = entry.createEntity(level);
+        if (entity == null || !entity.getType().equals(type)) {
+            com.alien.Alien.LOGGER.warn(
+                "Hive: discarded invalid identity reserve {} ({}) because it could not be restored.",
+                entry.uuid(),
+                net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(type)
+            );
+            return null;
+        }
+
+        entity.moveTo(
+            pos.getX() + 0.5,
+            pos.getY(),
+            pos.getZ() + 0.5,
+            level.random.nextFloat() * 360.0F,
+            0.0F
+        );
+        if (!level.addFreshEntity(entity)) {
+            location.localReserves().restoreIdentity(entry);
+            return null;
+        }
+
+        LocationMembership.join(location, entity);
+        if (entity instanceof Queen queen && location.founderId() == null) {
+            location.setFounderId(queen.getUUID());
+        }
+        return entity;
+    }
+
     private static @Nullable EntityType<?> pickWeightedReserveType(ServerLevel level, HiveLocation location) {
         var reserves = location.localReserves();
-        var knownQueenCount = CastePopulation.countKnownCaste(location, AlienEntityTypeTags.QUEENS);
-        var knownHarbingerCount = CastePopulation.countKnownCaste(location, AlienEntityTypeTags.HARBINGERS);
-        if (knownQueenCount <= 0) {
-            for (var type : reserves.getAvailableEntityTypes()) {
+        var loadedQueenCount = CastePopulation.countLoadedCaste(location, AlienEntityTypeTags.QUEENS);
+        var loadedHarbingerCount = CastePopulation.countLoadedCaste(location, AlienEntityTypeTags.HARBINGERS);
+        if (loadedQueenCount <= 0) {
+            for (var type : reserves.getReliableAvailableEntityTypes()) {
                 if (type.is(AlienEntityTypeTags.QUEENS)) {
                     return type;
                 }
@@ -130,18 +192,18 @@ public final class HiveLoadedSpawner {
         var weightedTypes = new ArrayList<WeightedType>();
         var totalWeight = 0;
 
-        for (var type : reserves.getAvailableEntityTypes()) {
+        for (var type : reserves.getReliableAvailableEntityTypes()) {
             if (!type.is(AlienEntityTypeTags.XENOMORPHS)) {
                 continue;
             }
-            if (type.is(AlienEntityTypeTags.QUEENS) && knownQueenCount > 0) {
+            if (type.is(AlienEntityTypeTags.QUEENS) && loadedQueenCount > 0) {
                 continue;
             }
-            if (type.is(AlienEntityTypeTags.HARBINGERS) && knownHarbingerCount > 0) {
+            if (type.is(AlienEntityTypeTags.HARBINGERS) && loadedHarbingerCount > 0) {
                 continue;
             }
 
-            var reserveCount = reserves.getCount(type);
+            var reserveCount = reserves.getReliableCount(type);
             var weight = weightFor(type) * Math.max(1, reserveCount);
             if (weight <= 0) {
                 continue;

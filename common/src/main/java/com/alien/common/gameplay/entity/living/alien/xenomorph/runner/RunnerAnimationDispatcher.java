@@ -1,73 +1,51 @@
 package com.alien.common.gameplay.entity.living.alien.xenomorph.runner;
 
 import com.alien.common.util.AzAlienAnimationUtil;
-import com.blib.api.client.animation.v1.AzAnimationUtil;
 import com.blib.api.client.animation.v1.command.AzCommand;
 import com.blib.api.client.animation.v1.command.play_behavior.AzPlayBehaviors;
 import com.blib.api.client.animation.v1.command.policy.AzDispatchMode;
 
 public class RunnerAnimationDispatcher {
 
-    private static final AzCommand<Runner> ARMATTACK_RIGHTARM = AzCommand.<Runner>replay()
-        .play(AzAlienAnimationUtil.RIGHT_ARM, RunnerAnimationRefs.ATTACKCLAWQUAD_RIGHTARM_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+    private static final AzCommand<Runner> ARM_ATTACK = AzCommand.<Runner>replay()
+        .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.FULL_ATTACK_ARM_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Runner> BITEATTACK_HEAD = AzCommand.<Runner>replay()
-        .play(AzAlienAnimationUtil.HEAD, RunnerAnimationRefs.BITEATTACK_HEAD_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+    private static final AzCommand<Runner> BITE_ATTACK = AzCommand.<Runner>replay()
+        .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.FULL_ATTACK_BITE_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Runner> TAILATTACKQUAD_TAIL = AzCommand.<Runner>replay()
-        .play(AzAlienAnimationUtil.TAIL, RunnerAnimationRefs.TAILATTACKQUAD_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+    private static final AzCommand<Runner> TAIL_ATTACK = AzCommand.<Runner>replay()
+        .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.FULL_ATTACK_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Runner> CRAWL_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "crawl",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Runner> CRAWL = AzCommand.<Runner>idempotent()
+        .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.CRAWL_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Runner> CRAWL_ALL_HOLD = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "crawl",
-        AzPlayBehaviors.HOLD_ON_LAST_FRAME,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Runner> CRAWL_HOLD = AzCommand.<Runner>idempotent()
+        .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.CRAWL_ANIMATION_NAME, AzPlayBehaviors.HOLD_ON_LAST_FRAME)
+        .build();
 
-    private static final AzCommand<Runner> IDLE_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "idle",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Runner> IDLE = AzCommand.<Runner>idempotent()
+        .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.IDLE_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Runner> LUNGE_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "lunge",
-        AzPlayBehaviors.PLAY_ONCE,
-        AzDispatchMode.REPLAY
-    );
+    private static final AzCommand<Runner> LUNGE = AzCommand.<Runner>replay()
+        .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.LUNGE_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+        .build();
 
-    private static final AzCommand<Runner> RUN_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "sprint",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Runner> RUN = AzCommand.<Runner>idempotent()
+        .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.RUN_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Runner> SWIM_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "swim",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Runner> SWIM = AzCommand.<Runner>idempotent()
+        .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.SWIM_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Runner> WALK_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "walk",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Runner> WALK = AzCommand.<Runner>idempotent()
+        .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.WALK_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
     private final Runner runner;
 
@@ -76,65 +54,75 @@ public class RunnerAnimationDispatcher {
     }
 
     public void crawl() {
-        CRAWL_ALL.dispatchForEntity(runner);
+        CRAWL.dispatchForEntity(runner);
+    }
+
+    public void crawl(float speed) {
+        AzAlienAnimationUtil.singleWithSpeed(
+            AzAlienAnimationUtil.BODY,
+            RunnerAnimationRefs.CRAWL_ANIMATION_NAME,
+            AzPlayBehaviors.LOOP,
+            AzDispatchMode.PLAY_IF_NOT_PLAYING,
+            speed
+        ).dispatchForEntity(runner);
     }
 
     public void crawlHold() {
-        CRAWL_ALL_HOLD.dispatchForEntity(runner);
+        CRAWL_HOLD.dispatchForEntity(runner);
     }
 
     public void idle() {
-        IDLE_ALL.dispatchForEntity(runner);
+        IDLE.dispatchForEntity(runner);
     }
 
     public void lunge() {
-        LUNGE_ALL.dispatchForEntity(runner);
+        LUNGE.dispatchForEntity(runner);
     }
 
     public void run() {
-        RUN_ALL.dispatchForEntity(runner);
+        RUN.dispatchForEntity(runner);
     }
 
     public void swim() {
-        SWIM_ALL.dispatchForEntity(runner);
+        SWIM.dispatchForEntity(runner);
     }
 
     public void walk() {
-        WALK_ALL.dispatchForEntity(runner);
+        WALK.dispatchForEntity(runner);
     }
 
     public void biteAttack() {
-        BITEATTACK_HEAD.dispatchForEntity(runner);
+        BITE_ATTACK.dispatchForEntity(runner);
     }
 
     public void biteAttack(float speed) {
         AzCommand.<Runner>replay()
-            .play(AzAlienAnimationUtil.HEAD, RunnerAnimationRefs.BITEATTACK_HEAD_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
-            .setSpeed(AzAlienAnimationUtil.HEAD, speed)
+            .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.FULL_ATTACK_BITE_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+            .setSpeed(AzAlienAnimationUtil.BODY, speed)
             .build()
             .dispatchForEntity(runner);
     }
 
     public void rightClawAttack() {
-        ARMATTACK_RIGHTARM.dispatchForEntity(runner);
+        ARM_ATTACK.dispatchForEntity(runner);
     }
 
     public void rightClawAttack(float speed) {
         AzCommand.<Runner>replay()
-            .play(AzAlienAnimationUtil.RIGHT_ARM, RunnerAnimationRefs.ATTACKCLAWQUAD_RIGHTARM_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
-            .setSpeed(AzAlienAnimationUtil.RIGHT_ARM, speed)
+            .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.FULL_ATTACK_ARM_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+            .setSpeed(AzAlienAnimationUtil.BODY, speed)
             .build()
             .dispatchForEntity(runner);
     }
 
     public void tailAttackQuad() {
-        TAILATTACKQUAD_TAIL.dispatchForEntity(runner);
+        TAIL_ATTACK.dispatchForEntity(runner);
     }
 
     public void tailAttackQuad(float speed) {
         AzCommand.<Runner>replay()
-            .play(AzAlienAnimationUtil.TAIL, RunnerAnimationRefs.TAILATTACKQUAD_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
-            .setSpeed(AzAlienAnimationUtil.TAIL, speed)
+            .play(AzAlienAnimationUtil.BODY, RunnerAnimationRefs.FULL_ATTACK_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+            .setSpeed(AzAlienAnimationUtil.BODY, speed)
             .build()
             .dispatchForEntity(runner);
     }

@@ -2,6 +2,7 @@ package com.alien.common.gameplay.entity.living.alien;
 
 import com.alien.common.data.AlienVariantTypes;
 import com.alien.common.gameplay.block.entity.resin.node.ChargeCursor;
+import com.alien.common.gameplay.block.entity.resin.node.ResinNodeBlockEntity;
 import com.alien.common.gameplay.hive.location.HiveLocation;
 import com.alien.common.gameplay.hive.location.HiveLocationRegistry;
 import com.alien.common.gameplay.hive.spawning.HiveLocationSpawnGate;
@@ -11,6 +12,7 @@ import com.alien.common.model.resin.ResinData;
 import com.blib.api.common.nbt.v1.model.NBTSerializable;
 import com.just.core.functional.option.Option;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -138,7 +140,9 @@ public class ResinManager implements GameEventListener.Provider<ResinSpreadListe
             // If the resin holder still has more resin, then we place a resin node manually.
             var resinNodeBlockState = alienVariantType.resinNode().get().defaultBlockState();
             // Place the resin node block at the suitable position.
-            level.setBlockAndUpdate(suitableResinNodeBlockPosOption.unwrap(), resinNodeBlockState);
+            var resinNodePos = suitableResinNodeBlockPosOption.unwrap();
+            level.setBlockAndUpdate(resinNodePos, resinNodeBlockState);
+            seedPlacedResinNode(level, resinNodePos, resinData.resin());
             resinData.setResin(0);
             paySpreadCost(location);
         }
@@ -171,7 +175,7 @@ public class ResinManager implements GameEventListener.Provider<ResinSpreadListe
         if (alien.getTarget() != null) {
             return false;
         }
-        if (alien.isUnderWater()) {
+        if (alien.isInWater() || alien.isUnderWater()) {
             return false;
         }
         // AND alien must have not been hurt for more than 10 seconds...
@@ -262,6 +266,16 @@ public class ResinManager implements GameEventListener.Provider<ResinSpreadListe
 
     private HiveLocation currentLocation() {
         return HiveLocationSpawnGate.locationContaining(alien.level(), alien.blockPosition());
+    }
+
+    private void seedPlacedResinNode(Level level, BlockPos resinNodePos, int totalCharge) {
+        if (totalCharge <= 0 || !(level.getBlockEntity(resinNodePos) instanceof ResinNodeBlockEntity resinNode)) {
+            return;
+        }
+
+        var spreader = resinNode.getListener().getResinSpreader();
+        spreader.addCursors(BlockPos.containing(alien.position().relative(Direction.UP, 0.5)), totalCharge);
+        spreader.updateCursors(level, resinNodePos, level.getRandom());
     }
 
     private Option<BlockPos> findSuitableResinNodeBlockPos(Level level, AlienVariantType alienVariantType) {

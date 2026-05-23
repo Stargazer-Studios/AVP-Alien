@@ -3,6 +3,7 @@ package com.alien.common.gameplay.entity.living.alien.xenomorph.burster;
 import com.alien.common.util.AzAlienAnimationUtil;
 import com.blib.api.client.animation.v1.command.AzCommand;
 import com.blib.api.client.animation.v1.command.play_behavior.AzPlayBehaviors;
+import com.blib.api.client.animation.v1.command.policy.AzDispatchMode;
 
 public class BursterAnimationDispatcher {
 
@@ -66,6 +67,16 @@ public class BursterAnimationDispatcher {
 
     public void crawl() {
         CRAWL.dispatchForEntity(burster);
+    }
+
+    public void crawl(float speed) {
+        AzAlienAnimationUtil.singleWithSpeed(
+            AzAlienAnimationUtil.BODY,
+            BursterAnimationRefs.CRAWL_ANIMATION_NAME,
+            AzPlayBehaviors.LOOP,
+            AzDispatchMode.PLAY_IF_NOT_PLAYING,
+            speed
+        ).dispatchForEntity(burster);
     }
 
     public void crawlHold() {

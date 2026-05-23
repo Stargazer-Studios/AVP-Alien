@@ -11,6 +11,7 @@ import com.blib.api.client.animation.v1.animator.AzAnimatorConfig;
 import com.blib.api.client.animation.v1.animator.AzEntityAnimator;
 import com.blib.api.client.animation.v1.track.AzAnimationTrack;
 import com.blib.api.client.animation.v1.track.AzAnimationTrackContainer;
+import com.blib.api.common.dismemberment.v1.DismembermentManager;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,6 +20,12 @@ public class QueenAnimator extends AzEntityAnimator<Queen> {
     private static final String NAME = "queen";
 
     private static final ResourceLocation ANIMATION = AlienResources.entityAnimationLocation(NAME);
+
+    private static final ResourceLocation LEFT_ARM_LIMB_ID = AlienResources.location("queen_left_arm");
+
+    private static final ResourceLocation QUEEN_TAIL_LIMB_ID = AlienResources.location("queen_tail");
+
+    private static final ResourceLocation RIGHT_ARM_LIMB_ID = AlienResources.location("queen_right_arm");
 
     private int previousAttackId = Integer.MIN_VALUE;
 
@@ -32,30 +39,6 @@ public class QueenAnimator extends AzEntityAnimator<Queen> {
     public void registerTracks(AzAnimationTrackContainer<Queen> animationTrackContainer) {
         animationTrackContainer.add(
             AzAnimationTrack.builder(this, AzAlienAnimationUtil.BODY)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.HEAD)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_TITTY_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_TITTY_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.TAIL)
                 .setTransitionLength(5)
                 .build()
         );
@@ -94,14 +77,19 @@ public class QueenAnimator extends AzEntityAnimator<Queen> {
 
         if (!attackType.isNone()) {
             if (attackId != previousAttackId) {
-                var speed = calculateAttackSpeed(queen, attackType);
+                var animationName = selectAttackAnimation(queen, attackType, attackId);
+                var speed = calculateAttackSpeed(queen, animationName);
 
-                if (attackType == Queen.SWIPE_DOWN)
-                    dispatcher.swipeDownAttack(speed);
-                else if (attackType == Queen.BACKHAND)
-                    dispatcher.backhandAttack(speed);
-                else if (attackType == Queen.TAIL_STRIKE)
-                    dispatcher.tailStrikeAttack(speed);
+                if (animationName == null) {
+                    previousAttackId = attackId;
+                    return;
+                } else if (attackType == Queen.SWIPE_DOWN) {
+                    dispatcher.swipeDownAttack(animationName, speed);
+                } else if (attackType == Queen.BACKHAND) {
+                    dispatcher.backhandAttack(animationName, speed);
+                } else if (attackType == Queen.TAIL_STRIKE) {
+                    dispatcher.tailStrikeAttack(animationName, speed);
+                }
 
                 previousAttackId = attackId;
             }
@@ -128,16 +116,7 @@ public class QueenAnimator extends AzEntityAnimator<Queen> {
         animFunction.run();
     }
 
-    private float calculateAttackSpeed(Queen queen, AttackType attackType) {
-        String animationName = null;
-
-        if (attackType == Queen.SWIPE_DOWN)
-            animationName = QueenAnimationRefs.SWIPEDOWN_BODY_ANIMATION_NAME;
-        else if (attackType == Queen.BACKHAND)
-            animationName = QueenAnimationRefs.BACKHAND_BODY_ANIMATION_NAME;
-        else if (attackType == Queen.TAIL_STRIKE)
-            animationName = QueenAnimationRefs.TAILSTRIKE_BODY_ANIMATION_NAME;
-
+    private float calculateAttackSpeed(Queen queen, String animationName) {
         var durationInTicks = queen.attackDurationInTicks.get();
 
         if (animationName == null || durationInTicks <= 0) {
@@ -147,5 +126,63 @@ public class QueenAnimator extends AzEntityAnimator<Queen> {
         var animation = getAnimation(queen, animationName);
 
         return (float) (animation.length() / durationInTicks);
+    }
+
+    private String selectAttackAnimation(Queen queen, AttackType attackType, int attackId) {
+        if (attackType == Queen.SWIPE_DOWN) {
+            return chooseArmAnimation(
+                queen,
+                attackId,
+                QueenAnimationRefs.LEFT_SWIPE_DOWN_ANIMATION_NAME,
+                QueenAnimationRefs.RIGHT_SWIPE_DOWN_ANIMATION_NAME
+            );
+        } else if (attackType == Queen.BACKHAND) {
+            return chooseArmAnimation(
+                queen,
+                attackId,
+                QueenAnimationRefs.LEFT_BACKHAND_ANIMATION_NAME,
+                QueenAnimationRefs.RIGHT_BACKHAND_ANIMATION_NAME
+            );
+        } else if (attackType == Queen.TAIL_STRIKE) {
+            return chooseTailAnimation(
+                queen,
+                attackId,
+                QueenAnimationRefs.LEFT_TAIL_STRIKE_ANIMATION_NAME,
+                QueenAnimationRefs.RIGHT_TAIL_STRIKE_ANIMATION_NAME
+            );
+        }
+
+        return null;
+    }
+
+    private String chooseArmAnimation(Queen queen, int attackId, String leftAnimationName, String rightAnimationName) {
+        var leftArmAttached = !DismembermentManager.isDetached(queen, LEFT_ARM_LIMB_ID);
+        var rightArmAttached = !DismembermentManager.isDetached(queen, RIGHT_ARM_LIMB_ID);
+
+        if (leftArmAttached && !rightArmAttached) {
+            return leftAnimationName;
+        }
+
+        if (rightArmAttached && !leftArmAttached) {
+            return rightAnimationName;
+        }
+
+        if (!leftArmAttached) {
+            return null;
+        }
+
+        return chooseAlternatingAnimation(attackId, leftAnimationName, rightAnimationName);
+    }
+
+    private String chooseTailAnimation(Queen queen, int attackId, String leftAnimationName, String rightAnimationName) {
+        if (DismembermentManager.isDetached(queen, QUEEN_TAIL_LIMB_ID)) {
+            return null;
+        }
+
+        return chooseAlternatingAnimation(attackId, leftAnimationName, rightAnimationName);
+    }
+
+    private String chooseAlternatingAnimation(int attackId, String leftAnimationName, String rightAnimationName) {
+        return (attackId & 1) == 0 ? leftAnimationName : rightAnimationName;
     }
 }

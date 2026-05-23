@@ -16,6 +16,8 @@ public class CombatCreativeModeTabInitializer {
         if (AVPHuman.MOD.isLoaded()) {
             addIrradiatedXenomorphArmors(output);
         }
+
+        XenomorphHeadCreativeModeTabEntries.addHeadShields(output);
     };
 
     private static void addBaseXenomorphArmors(CreativeModeTab.Output output) {
@@ -67,4 +69,5 @@ public class CombatCreativeModeTabInitializer {
         // CreativeModeTabUtil.accept(output, AlienArmorItems.PLATED_IRRADIATED_CHITIN_LEGGINGS);
         // CreativeModeTabUtil.accept(output, AlienArmorItems.PLATED_IRRADIATED_CHITIN_BOOTS);
     }
+
 }

@@ -6,7 +6,6 @@ import com.alien.common.registry.init.block.IrradiatedAlienResinBlocks;
 import com.alien.common.registry.init.block.NetherAlienResinBlocks;
 import com.alien.common.registry.init.item.AlienItems;
 import com.alien.fabric.compatibility.avp_human.AVPHumanFabric;
-import com.blib.fabric.data.recipe.RecipeTemplates;
 import com.blib.fabric.data.recipe.builder.RecipeBuilder;
 import com.blib.fabric.data.recipe.util.RecipeUtil;
 import net.minecraft.data.recipes.RecipeCategory;
@@ -93,15 +92,13 @@ public class ResinRecipeProvider {
     }
 
     private static void createResinRecipesFromSet(RecipeBuilder builder, ResinSet set) {
-        builder.shaped()
+        builder.stonecut(set.resinBlock())
             .withCategory(RecipeCategory.BUILDING_BLOCKS)
-            .apply(RecipeTemplates.PLUS_CROSS.apply(set.resinBallItem().get()))
-            .into(5, set.vein());
+            .into(4, set.vein());
 
-        builder.shaped()
+        builder.stonecut(set.resinBlock())
             .withCategory(RecipeCategory.BUILDING_BLOCKS)
-            .apply(RecipeTemplates.X_CROSS.apply(set.resinBallItem().get()))
-            .into(1, set.web());
+            .into(2, set.web());
 
         // Resin block
         RecipeUtil.createCompressedBlockRecipes2x2(builder, set.resinBallItem().get(), set.resinBlock().get());

@@ -4,6 +4,7 @@ import com.alien.AlienResources;
 import com.alien.client.animation.entity.cocoon.CocoonAnimationStateTracker;
 import com.alien.common.gameplay.entity.living.alien.xenomorph.boiler.Boiler;
 import com.alien.common.gameplay.entity.living.alien.xenomorph.boiler.BoilerAnimationRefs;
+import com.alien.common.util.AzAlienAnimationUtil;
 import com.alien.common.util.AzAlienHeadAnimationUtil;
 import com.blib.api.client.animation.v1.animator.AzAnimatorConfig;
 import com.blib.api.client.animation.v1.animator.AzEntityAnimator;
@@ -62,7 +63,7 @@ public class BoilerAnimator extends AzEntityAnimator<Boiler> {
             animFunction = dispatcher::swim;
         } else if (isMovingOnGround) {
             if (isCrawling) {
-                animFunction = dispatcher::crawl;
+                animFunction = () -> dispatcher.crawl(AzAlienAnimationUtil.crawlAnimationSpeed(boiler));
             } else if (boiler.isMovingQuickly.get()) {
                 animFunction = dispatcher::run;
             } else {

@@ -25,6 +25,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+
 public class Ravager extends Xenomorph implements GOAPUser<Ravager> {
 
     public static final double FRONT_AOE_RANGE_IN_BLOCKS = 5.0;
@@ -50,28 +52,33 @@ public class Ravager extends Xenomorph implements GOAPUser<Ravager> {
     };
 
     public static final AttackType CLAW = AttackType.builder("ravager_claw")
+        .requiresAnyArm()
         .defaultDurationInTicks(10 * ATTACK_DURATION_MULTIPLIER)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .damageApplicator(SINGLE_CLAW_APPLICATOR)
         .build();
 
     public static final AttackType CLAW_DOUBLE = AttackType.builder("ravager_claw_double")
+        .requiresBothArms()
         .defaultDurationInTicks(10 * ATTACK_DURATION_MULTIPLIER)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .damageApplicator(DOUBLE_CLAW_APPLICATOR)
         .build();
 
     public static final AttackType BITE = AttackType.builder("ravager_bite")
+        .requiresHead()
         .defaultDurationInTicks(8 * ATTACK_DURATION_MULTIPLIER)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType TAIL = AttackType.builder("ravager_tail")
+        .requiresTail()
         .defaultDurationInTicks(12 * ATTACK_DURATION_MULTIPLIER)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType SWIM_ATTACK = AttackType.builder("ravager_swim_attack")
+        .requiresTail()
         .defaultDurationInTicks(10 * ATTACK_DURATION_MULTIPLIER)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
@@ -79,7 +86,7 @@ public class Ravager extends Xenomorph implements GOAPUser<Ravager> {
     private static final XenomorphConfig CONFIG = XenomorphConfig.builder(XenomorphPathConfig.LARGE, Ravager::getType)
         .attackConfig(
             XenomorphAttackConfig.builder()
-                .addTriggered(RavagerChargeAttack.ATTACK)
+                .addTriggered(RavagerSpecialCleaveAttack.ATTACK)
                 .build()
         )
         .parallelDigCount(2)
@@ -116,24 +123,39 @@ public class Ravager extends Xenomorph implements GOAPUser<Ravager> {
 
     @Override
     public void runAttackAnimations() {
-        startAttack(selectAttack(), getTarget());
+        var attack = selectAttack();
+
+        if (attack != null) {
+            startAttack(attack, getTarget());
+        }
     }
 
-    private AttackType selectAttack() {
-        if (isUnderWater()) {
+    private @Nullable AttackType selectAttack() {
+        if (isUnderWater() && canUseAttack(SWIM_ATTACK)) {
             return SWIM_ATTACK;
         }
 
         if (getNearbyCloseAttackTargetCount() > 1) {
-            return random.nextBoolean() ? CLAW : CLAW_DOUBLE;
+            var closeAttack = selectRandomUsableAttack(CLAW, CLAW_DOUBLE);
+
+            if (closeAttack != null) {
+                return closeAttack;
+            }
         }
 
-        return switch (random.nextInt(0, 4)) {
-            case 0 -> CLAW;
-            case 1 -> CLAW_DOUBLE;
-            case 2 -> BITE;
-            default -> TAIL;
-        };
+        return selectRandomUsableAttack(CLAW, CLAW_DOUBLE, BITE, TAIL);
+    }
+
+    private @Nullable AttackType selectRandomUsableAttack(AttackType... attacks) {
+        var usableAttacks = Arrays.stream(attacks)
+            .filter(this::canUseAttack)
+            .toList();
+
+        if (usableAttacks.isEmpty()) {
+            return null;
+        }
+
+        return usableAttacks.get(random.nextInt(usableAttacks.size()));
     }
 
     private long getNearbyCloseAttackTargetCount() {

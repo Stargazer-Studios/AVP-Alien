@@ -33,24 +33,6 @@ public class HarbingerAnimator extends AzEntityAnimator<Harbinger> {
         animationTrackContainer.add(
             AzAnimationTrack.builder(this, AzAlienAnimationUtil.BODY)
                 .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.HEAD)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.TAIL)
-                .setTransitionLength(5)
                 .build()
         );
     }
@@ -97,18 +79,21 @@ public class HarbingerAnimator extends AzEntityAnimator<Harbinger> {
         }
 
         var isMovingOnGround = harbinger.isMovingHorizontally.get() && harbinger.onGround();
+        var isCrawling = harbinger.getCrawlingManager().isCrawling();
         Runnable animFunction;
 
         if (harbinger.isUnderWater()) {
             animFunction = dispatcher::swim;
         } else if (isMovingOnGround) {
-            if (harbinger.isMovingQuickly.get()) {
+            if (isCrawling) {
+                animFunction = () -> dispatcher.crawl(AzAlienAnimationUtil.crawlAnimationSpeed(harbinger));
+            } else if (harbinger.isMovingQuickly.get()) {
                 animFunction = dispatcher::run;
             } else {
                 animFunction = dispatcher::walk;
             }
         } else {
-            animFunction = dispatcher::idle;
+            animFunction = isCrawling ? dispatcher::crawlIdle : dispatcher::idle;
         }
 
         animFunction.run();
@@ -118,11 +103,11 @@ public class HarbingerAnimator extends AzEntityAnimator<Harbinger> {
         String animationName;
 
         if (attackType == Harbinger.BITE) {
-            animationName = HarbingerAnimationRefs.ATTACKBITE_HEAD_ANIMATION_NAME;
+            animationName = HarbingerAnimationRefs.ATTACK_BITE_ANIMATION_NAME;
         } else if (attackType == Harbinger.CLAW) {
-            animationName = HarbingerAnimationRefs.ATTACKCLAW_RIGHTARM_ANIMATION_NAME;
+            animationName = HarbingerAnimationRefs.ATTACK_CLAW_ANIMATION_NAME;
         } else if (attackType == Harbinger.TAIL) {
-            animationName = HarbingerAnimationRefs.ATTACKTAIL_TAIL_ANIMATION_NAME;
+            animationName = HarbingerAnimationRefs.ATTACK_TAIL_ANIMATION_NAME;
         } else {
             animationName = null;
         }

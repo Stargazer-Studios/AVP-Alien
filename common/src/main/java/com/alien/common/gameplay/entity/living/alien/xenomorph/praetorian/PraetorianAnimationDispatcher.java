@@ -1,52 +1,38 @@
 package com.alien.common.gameplay.entity.living.alien.xenomorph.praetorian;
 
 import com.alien.common.util.AzAlienAnimationUtil;
-import com.blib.api.client.animation.v1.AzAnimationUtil;
 import com.blib.api.client.animation.v1.command.AzCommand;
 import com.blib.api.client.animation.v1.command.play_behavior.AzPlayBehaviors;
-import com.blib.api.client.animation.v1.command.policy.AzDispatchMode;
 
 public class PraetorianAnimationDispatcher {
 
-    private static final AzCommand<Praetorian> ARMATTACK_RIGHTARM = AzCommand.<Praetorian>replay()
-        .play(AzAlienAnimationUtil.RIGHT_ARM, PraetorianAnimationRefs.ATTACKCLAW_RIGHTARM_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+    private static final AzCommand<Praetorian> CLAW_ATTACK = AzCommand.<Praetorian>replay()
+        .play(AzAlienAnimationUtil.BODY, PraetorianAnimationRefs.FULL_ATTACK_CLAW_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Praetorian> BITEATTACK_HEAD = AzCommand.<Praetorian>replay()
-        .play(AzAlienAnimationUtil.HEAD, PraetorianAnimationRefs.ATTACKBITE_HEAD_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+    private static final AzCommand<Praetorian> BITE_ATTACK = AzCommand.<Praetorian>replay()
+        .play(AzAlienAnimationUtil.BODY, PraetorianAnimationRefs.FULL_ATTACK_BITE_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Praetorian> TAILATTACKQUAD_TAIL = AzCommand.<Praetorian>replay()
-        .play(AzAlienAnimationUtil.TAIL, PraetorianAnimationRefs.ATTACKTAIL_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+    private static final AzCommand<Praetorian> TAIL_ATTACK = AzCommand.<Praetorian>replay()
+        .play(AzAlienAnimationUtil.BODY, PraetorianAnimationRefs.FULL_ATTACK_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Praetorian> IDLE_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "idle",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Praetorian> IDLE = AzCommand.<Praetorian>idempotent()
+        .play(AzAlienAnimationUtil.BODY, PraetorianAnimationRefs.IDLE_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Praetorian> RUN_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "run",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Praetorian> RUN = AzCommand.<Praetorian>idempotent()
+        .play(AzAlienAnimationUtil.BODY, PraetorianAnimationRefs.RUN_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Praetorian> SWIM_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "swim",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Praetorian> SWIM = AzCommand.<Praetorian>idempotent()
+        .play(AzAlienAnimationUtil.BODY, PraetorianAnimationRefs.SWIM_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Praetorian> WALK_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "walk",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Praetorian> WALK = AzCommand.<Praetorian>idempotent()
+        .play(AzAlienAnimationUtil.BODY, PraetorianAnimationRefs.WALK_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
     private final Praetorian praetorian;
 
@@ -55,53 +41,53 @@ public class PraetorianAnimationDispatcher {
     }
 
     public void idle() {
-        IDLE_ALL.dispatchForEntity(praetorian);
+        IDLE.dispatchForEntity(praetorian);
     }
 
     public void run() {
-        RUN_ALL.dispatchForEntity(praetorian);
+        RUN.dispatchForEntity(praetorian);
     }
 
     public void swim() {
-        SWIM_ALL.dispatchForEntity(praetorian);
+        SWIM.dispatchForEntity(praetorian);
     }
 
     public void walk() {
-        WALK_ALL.dispatchForEntity(praetorian);
+        WALK.dispatchForEntity(praetorian);
     }
 
     public void biteAttack() {
-        BITEATTACK_HEAD.dispatchForEntity(praetorian);
+        BITE_ATTACK.dispatchForEntity(praetorian);
     }
 
     public void biteAttack(float speed) {
         AzCommand.<Praetorian>replay()
-            .play(AzAlienAnimationUtil.HEAD, PraetorianAnimationRefs.ATTACKBITE_HEAD_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
-            .setSpeed(AzAlienAnimationUtil.HEAD, speed)
+            .play(AzAlienAnimationUtil.BODY, PraetorianAnimationRefs.FULL_ATTACK_BITE_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+            .setSpeed(AzAlienAnimationUtil.BODY, speed)
             .build()
             .dispatchForEntity(praetorian);
     }
 
     public void rightClawAttack() {
-        ARMATTACK_RIGHTARM.dispatchForEntity(praetorian);
+        CLAW_ATTACK.dispatchForEntity(praetorian);
     }
 
     public void rightClawAttack(float speed) {
         AzCommand.<Praetorian>replay()
-            .play(AzAlienAnimationUtil.RIGHT_ARM, PraetorianAnimationRefs.ATTACKCLAW_RIGHTARM_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
-            .setSpeed(AzAlienAnimationUtil.RIGHT_ARM, speed)
+            .play(AzAlienAnimationUtil.BODY, PraetorianAnimationRefs.FULL_ATTACK_CLAW_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+            .setSpeed(AzAlienAnimationUtil.BODY, speed)
             .build()
             .dispatchForEntity(praetorian);
     }
 
     public void tailAttack() {
-        TAILATTACKQUAD_TAIL.dispatchForEntity(praetorian);
+        TAIL_ATTACK.dispatchForEntity(praetorian);
     }
 
     public void tailAttack(float speed) {
         AzCommand.<Praetorian>replay()
-            .play(AzAlienAnimationUtil.TAIL, PraetorianAnimationRefs.ATTACKTAIL_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
-            .setSpeed(AzAlienAnimationUtil.TAIL, speed)
+            .play(AzAlienAnimationUtil.BODY, PraetorianAnimationRefs.FULL_ATTACK_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+            .setSpeed(AzAlienAnimationUtil.BODY, speed)
             .build()
             .dispatchForEntity(praetorian);
     }

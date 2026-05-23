@@ -90,7 +90,7 @@ public class BursterAnimator extends AzEntityAnimator<Burster> {
             animFunction = dispatcher::swim;
         } else if (isMoving) {
             if (isCrawling) {
-                animFunction = dispatcher::crawl;
+                animFunction = () -> dispatcher.crawl(AzAlienAnimationUtil.crawlAnimationSpeed(burster));
             } else if (burster.isMovingQuickly.get()) {
                 animFunction = dispatcher::run;
             } else {

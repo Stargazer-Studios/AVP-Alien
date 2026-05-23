@@ -1,7 +1,9 @@
 package com.alien.common.gameplay.entity.living.alien.xenomorph.boiler;
 
+import com.alien.common.util.AzAlienAnimationUtil;
 import com.blib.api.client.animation.v1.command.AzCommand;
 import com.blib.api.client.animation.v1.command.play_behavior.AzPlayBehaviors;
+import com.blib.api.client.animation.v1.command.policy.AzDispatchMode;
 
 public class BoilerAnimationDispatcher {
 
@@ -37,6 +39,16 @@ public class BoilerAnimationDispatcher {
 
     public void crawl() {
         CRAWL.dispatchForEntity(boiler);
+    }
+
+    public void crawl(float speed) {
+        AzAlienAnimationUtil.singleWithSpeed(
+            BoilerAnimationRefs.FULL_BODY,
+            BoilerAnimationRefs.CRAWL_ANIMATION_NAME,
+            AzPlayBehaviors.LOOP,
+            AzDispatchMode.PLAY_IF_NOT_PLAYING,
+            speed
+        ).dispatchForEntity(boiler);
     }
 
     public void crawlHold() {

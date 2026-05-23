@@ -2,9 +2,11 @@ package com.alien.common.gameplay.hive.lifecycle;
 
 import com.alien.Alien;
 import com.alien.common.data.AlienAdvancements;
+import com.alien.common.gameplay.hive.economy.CastePopulation;
 import com.alien.common.gameplay.hive.faction.LineageFactionData;
 import com.alien.common.gameplay.hive.faction.LineageRemovalReason;
 import com.alien.common.gameplay.hive.id.LineageIds;
+import com.alien.common.gameplay.hive.location.HiveLocation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 
@@ -14,15 +16,14 @@ import java.util.ArrayList;
  * Per-tick lineage death check. No grace periods — runs every server tick from
  * {@link com.alien.common.gameplay.hive.location.HiveLocationRegistry#tick}.
  * <ul>
- * <li><b>Members empty AND locationsById non-empty</b> → kill every owned location via
- * {@link LocationDeathHandler#killNaturalDecay}. The natural-decay path removes the per-location faction and releases
- * chunks.</li>
+ * <li><b>Members empty AND locationsById non-empty</b> → kill owned locations that also have no reliable population.
+ * Reliable population matches the boss bar: loaded xenomorphs + local reserves.</li>
  * <li><b>Members empty AND locationsById empty</b> → kill the lineage immediately. Sets
  * {@link LineageRemovalReason.NoLocationsRemain} and calls {@code Alien.MOD.factions().remove(lineageId)}.</li>
  * </ul>
  * <p>
- * The shed path ({@code HiveManager.tryShedFromLineages}) removes the last alien synchronously, then discards the
- * entity — so this cleanup fires on the very next tick when {@code members().isEmpty()} is observed.
+ * A lineage may temporarily have no BLib members while still owning reserve population; those locations remain alive
+ * because reserves are reliable and spawnable.
  */
 public final class LineageDeathHandler {
 
@@ -77,17 +78,24 @@ public final class LineageDeathHandler {
             return;
         }
 
-        var snapshot = new ArrayList<>(lineage.locationsById().values());
+        var killable = new ArrayList<HiveLocation>();
+        for (var location : new ArrayList<>(lineage.locationsById().values())) {
+            if (location.isAlive() && CastePopulation.totalReliableXenomorphPopulation(location) == 0) {
+                killable.add(location);
+            }
+        }
+
+        if (killable.isEmpty()) {
+            return;
+        }
+
         Alien.LOGGER.info(
-            "Hive: lineage {} has 0 members; killing {} owned location(s)",
+            "Hive: lineage {} has 0 members; killing {} owned location(s) with no reliable population",
             lineageId,
-            snapshot.size()
+            killable.size()
         );
 
-        for (var location : snapshot) {
-            if (!location.isAlive()) {
-                continue;
-            }
+        for (var location : killable) {
             LocationDeathHandler.killNaturalDecay(serverLevel, location, lineage);
         }
     }

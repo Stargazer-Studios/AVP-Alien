@@ -2,6 +2,7 @@ package com.alien.fabric.data.recipe.impl;
 
 import com.alien.common.registry.init.block.AlienBlocks;
 import com.alien.common.registry.init.item.AlienItems;
+import com.alien.common.registry.init.item.AlienXenomorphHeadItems;
 import com.alien.fabric.compatibility.avp_human.AVPHumanFabric;
 import com.blib.fabric.data.recipe.RecipeConstants;
 import com.blib.fabric.data.recipe.builder.RecipeBuilder;
@@ -57,56 +58,12 @@ public class MiscellaneousRecipeProvider {
             .requires(9, AlienItems.ALIEN_MUSIC_DISC_1_FRAGMENT)
             .into(1, AlienItems.ALIEN_MUSIC_DISC_1);
 
-        // Queen head trophy + vanilla shield -> queen head shield. One-way conversion: there's no recipe
-        // back to the wearable head, so crafting commits to the combat utility.
-        builder.shapeless()
+        // Head trophy + vanilla shield -> head shield. One-way conversion: crafting commits to combat utility.
+        AlienXenomorphHeadItems.ALL.forEach(entry -> builder.shapeless()
             .withCategory(RecipeCategory.COMBAT)
-            .requires(1, AlienItems.QUEEN_HEAD)
+            .requires(1, entry.head())
             .requires(1, Items.SHIELD)
-            .into(1, AlienItems.QUEEN_HEAD_SHIELD);
-
-        builder.shapeless()
-            .withCategory(RecipeCategory.COMBAT)
-            .requires(1, AlienItems.ABERRANT_QUEEN_HEAD)
-            .requires(1, Items.SHIELD)
-            .into(1, AlienItems.ABERRANT_QUEEN_HEAD_SHIELD);
-
-        builder.shapeless()
-            .withCategory(RecipeCategory.COMBAT)
-            .requires(1, AlienItems.IRRADIATED_QUEEN_HEAD)
-            .requires(1, Items.SHIELD)
-            .into(1, AlienItems.IRRADIATED_QUEEN_HEAD_SHIELD);
-
-        builder.shapeless()
-            .withCategory(RecipeCategory.COMBAT)
-            .requires(1, AlienItems.NETHER_QUEEN_HEAD)
-            .requires(1, Items.SHIELD)
-            .into(1, AlienItems.NETHER_QUEEN_HEAD_SHIELD);
-
-        // Crusher head trophy + vanilla shield -> crusher head shield. Mirrors the queen recipe family.
-        builder.shapeless()
-            .withCategory(RecipeCategory.COMBAT)
-            .requires(1, AlienItems.CRUSHER_HEAD)
-            .requires(1, Items.SHIELD)
-            .into(1, AlienItems.CRUSHER_HEAD_SHIELD);
-
-        builder.shapeless()
-            .withCategory(RecipeCategory.COMBAT)
-            .requires(1, AlienItems.ABERRANT_CRUSHER_HEAD)
-            .requires(1, Items.SHIELD)
-            .into(1, AlienItems.ABERRANT_CRUSHER_HEAD_SHIELD);
-
-        builder.shapeless()
-            .withCategory(RecipeCategory.COMBAT)
-            .requires(1, AlienItems.IRRADIATED_CRUSHER_HEAD)
-            .requires(1, Items.SHIELD)
-            .into(1, AlienItems.IRRADIATED_CRUSHER_HEAD_SHIELD);
-
-        builder.shapeless()
-            .withCategory(RecipeCategory.COMBAT)
-            .requires(1, AlienItems.NETHER_CRUSHER_HEAD)
-            .requires(1, Items.SHIELD)
-            .into(1, AlienItems.NETHER_CRUSHER_HEAD_SHIELD);
+            .into(1, entry.headShield()));
     }
 
     private static void provideMiscellaneousNetherRecipes(RecipeBuilder builder) {

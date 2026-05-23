@@ -1,6 +1,7 @@
 package com.alien.common.gameplay.hive.lifecycle;
 
 import com.alien.Alien;
+import com.alien.common.gameplay.hive.economy.CastePopulation;
 import com.alien.common.gameplay.hive.faction.LineageFactionData;
 import com.alien.common.gameplay.hive.id.LineageIds;
 import com.alien.common.gameplay.hive.location.HiveLocation;
@@ -15,12 +16,11 @@ import java.util.ArrayList;
  * Per-tick location death check. Replaces the legacy 24h dormancy timer with three accuracy-first rules:
  * <ol>
  * <li>Zero claimed chunks → kill (preserved from the legacy behavior).</li>
- * <li>Location faction empty AND local reserves empty → kill (membership is BLib-persistent so this is reliable across
- * chunk unloads).</li>
- * <li>Parent lineage faction empty → kill (defensive backup — also fired from {@link LineageDeathHandler}).</li>
+ * <li>No reliable xenomorph population → kill. Reliable population matches the boss bar: actively loaded xenomorphs in
+ * this location + local reserves.</li>
  * <li>No-contact safety net: {@link HiveLocation#noContactTicksAccrued()} accumulates while ≥1 claimed chunk is loaded
- * AND no location-faction member is currently in any claimed chunk. Pauses when nothing is loaded; resets when contact
- * is observed; triggers a kill at {@link com.alien.common.gameplay.hive.config.HiveConfig#locationMaxNoContactTicks()}
+ * AND no loaded location member is currently in any claimed chunk. Pauses when nothing is loaded; resets when contact is
+ * observed; triggers a kill at {@link com.alien.common.gameplay.hive.config.HiveConfig#locationMaxNoContactTicks()}
  * (default 7 game-days).</li>
  * </ol>
  * <p>
@@ -51,8 +51,6 @@ public final class LocationDormancyTask {
                 continue;
             }
 
-            var lineageMemberCount = faction.membership().getMembers().size();
-
             // Snapshot since LocationDeathHandler.killNaturalDecay can mutate locationsById.
             var locations = new ArrayList<>(lineage.locationsById().values());
             for (var location : locations) {
@@ -60,7 +58,7 @@ public final class LocationDormancyTask {
                     continue;
                 }
 
-                if (evaluateLocation(serverLevel, location, lineage, lineageMemberCount, maxNoContact)) {
+                if (evaluateLocation(serverLevel, location, lineage, maxNoContact)) {
                     // Killed — skip further checks on this location.
                     continue;
                 }
@@ -73,7 +71,6 @@ public final class LocationDormancyTask {
         ServerLevel level,
         HiveLocation location,
         LineageFactionData lineage,
-        int lineageMemberCount,
         long maxNoContact
     ) {
         // Rule 1: zero claimed chunks → die.
@@ -82,23 +79,13 @@ public final class LocationDormancyTask {
             return true;
         }
 
-        // Rule 3: parent lineage faction empty. LineageDeathHandler also does this explicitly; this backup catches the
-        // case if the lineage check runs after this.
-        if (lineageMemberCount == 0) {
+        // Rule 2: boss-bar source of truth. Persisted unloaded members do not keep a location alive.
+        if (CastePopulation.totalReliableXenomorphPopulation(location) == 0) {
             LocationDeathHandler.killNaturalDecay(level, location, lineage);
             return true;
         }
 
-        // Rule 2: location faction empty AND no stored population → die.
-        var locationFaction = Alien.MOD.factions().get(location.id().value());
-        var locationMemberCount = locationFaction != null ? locationFaction.membership().getMembers().size() : 0;
-        var storedPopulationCount = location.localReserves().getCount();
-        if (locationMemberCount == 0 && storedPopulationCount == 0) {
-            LocationDeathHandler.killNaturalDecay(level, location, lineage);
-            return true;
-        }
-
-        // Rule 4: no-contact safety net.
+        // Rule 3: no-contact safety net.
         var anyChunkLoaded = false;
         var memberInTerritory = false;
 
@@ -109,17 +96,19 @@ public final class LocationDormancyTask {
             }
         }
 
-        if (anyChunkLoaded && locationFaction != null) {
-            for (var member : locationFaction.membership().getMembers()) {
-                if (!(member instanceof com.blib.api.common.faction.v1.FactionMember.Entity entityMember)) {
-                    continue;
+        if (anyChunkLoaded) {
+            for (var memberIds : location.loadedMembersByType().values()) {
+                for (var memberId : memberIds) {
+                    var entity = level.getEntity(memberId);
+                    if (entity == null) {
+                        continue;
+                    }
+                    if (location.claimedChunks().contains(new ChunkPos(entity.blockPosition()))) {
+                        memberInTerritory = true;
+                        break;
+                    }
                 }
-                var entity = level.getEntity(entityMember.uuid());
-                if (entity == null) {
-                    continue;
-                }
-                if (location.claimedChunks().contains(new ChunkPos(entity.blockPosition()))) {
-                    memberInTerritory = true;
+                if (memberInTerritory) {
                     break;
                 }
             }

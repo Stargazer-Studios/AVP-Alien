@@ -1,73 +1,51 @@
 package com.alien.common.gameplay.entity.living.alien.xenomorph.warrior;
 
 import com.alien.common.util.AzAlienAnimationUtil;
-import com.blib.api.client.animation.v1.AzAnimationUtil;
 import com.blib.api.client.animation.v1.command.AzCommand;
 import com.blib.api.client.animation.v1.command.play_behavior.AzPlayBehaviors;
 import com.blib.api.client.animation.v1.command.policy.AzDispatchMode;
 
 public class WarriorAnimationDispatcher {
 
-    private static final AzCommand<Warrior> ARMATTACK_RIGHTARM = AzCommand.<Warrior>replay()
-        .play(AzAlienAnimationUtil.RIGHT_ARM, WarriorAnimationRefs.ATTACKCLAW_RIGHTARM_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+    private static final AzCommand<Warrior> CLAW_ATTACK = AzCommand.<Warrior>replay()
+        .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.FULL_ATTACK_CLAW_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Warrior> BITEATTACK_HEAD = AzCommand.<Warrior>replay()
-        .play(AzAlienAnimationUtil.HEAD, WarriorAnimationRefs.ATTACKBITE_HEAD_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+    private static final AzCommand<Warrior> BITE_ATTACK = AzCommand.<Warrior>replay()
+        .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.FULL_ATTACK_BITE_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Warrior> TAILATTACKQUAD_TAIL = AzCommand.<Warrior>replay()
-        .play(AzAlienAnimationUtil.TAIL, WarriorAnimationRefs.ATTACKTAIL_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+    private static final AzCommand<Warrior> TAIL_ATTACK = AzCommand.<Warrior>replay()
+        .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.FULL_ATTACK_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Warrior> CRAWL_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "crawl",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Warrior> CRAWL = AzCommand.<Warrior>idempotent()
+        .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.CRAWL_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Warrior> CRAWL_ALL_HOLD = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "crawl",
-        AzPlayBehaviors.HOLD_ON_LAST_FRAME,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Warrior> CRAWL_HOLD = AzCommand.<Warrior>idempotent()
+        .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.CRAWL_ANIMATION_NAME, AzPlayBehaviors.HOLD_ON_LAST_FRAME)
+        .build();
 
-    private static final AzCommand<Warrior> IDLE_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "idle",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Warrior> IDLE = AzCommand.<Warrior>idempotent()
+        .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.IDLE_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Warrior> LUNGE_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "lunge",
-        AzPlayBehaviors.PLAY_ONCE,
-        AzDispatchMode.REPLAY
-    );
+    private static final AzCommand<Warrior> LUNGE = AzCommand.<Warrior>replay()
+        .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.LUNGE_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+        .build();
 
-    private static final AzCommand<Warrior> RUN_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "run",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Warrior> RUN = AzCommand.<Warrior>idempotent()
+        .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.RUN_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Warrior> SWIM_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "swim",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Warrior> SWIM = AzCommand.<Warrior>idempotent()
+        .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.SWIM_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
-    private static final AzCommand<Warrior> WALK_ALL = AzAnimationUtil.compose(
-        AzAlienAnimationUtil.XENO_LIMBS,
-        "walk",
-        AzPlayBehaviors.LOOP,
-        AzDispatchMode.PLAY_IF_NOT_PLAYING
-    );
+    private static final AzCommand<Warrior> WALK = AzCommand.<Warrior>idempotent()
+        .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.WALK_ANIMATION_NAME, AzPlayBehaviors.LOOP)
+        .build();
 
     private final Warrior warrior;
 
@@ -76,65 +54,75 @@ public class WarriorAnimationDispatcher {
     }
 
     public void crawl() {
-        CRAWL_ALL.dispatchForEntity(warrior);
+        CRAWL.dispatchForEntity(warrior);
+    }
+
+    public void crawl(float speed) {
+        AzAlienAnimationUtil.singleWithSpeed(
+            AzAlienAnimationUtil.BODY,
+            WarriorAnimationRefs.CRAWL_ANIMATION_NAME,
+            AzPlayBehaviors.LOOP,
+            AzDispatchMode.PLAY_IF_NOT_PLAYING,
+            speed
+        ).dispatchForEntity(warrior);
     }
 
     public void crawlHold() {
-        CRAWL_ALL_HOLD.dispatchForEntity(warrior);
+        CRAWL_HOLD.dispatchForEntity(warrior);
     }
 
     public void idle() {
-        IDLE_ALL.dispatchForEntity(warrior);
+        IDLE.dispatchForEntity(warrior);
     }
 
     public void lunge() {
-        LUNGE_ALL.dispatchForEntity(warrior);
+        LUNGE.dispatchForEntity(warrior);
     }
 
     public void run() {
-        RUN_ALL.dispatchForEntity(warrior);
+        RUN.dispatchForEntity(warrior);
     }
 
     public void swim() {
-        SWIM_ALL.dispatchForEntity(warrior);
+        SWIM.dispatchForEntity(warrior);
     }
 
     public void walk() {
-        WALK_ALL.dispatchForEntity(warrior);
+        WALK.dispatchForEntity(warrior);
     }
 
     public void biteAttack() {
-        BITEATTACK_HEAD.dispatchForEntity(warrior);
+        BITE_ATTACK.dispatchForEntity(warrior);
     }
 
     public void biteAttack(float speed) {
         AzCommand.<Warrior>replay()
-            .play(AzAlienAnimationUtil.HEAD, WarriorAnimationRefs.ATTACKBITE_HEAD_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
-            .setSpeed(AzAlienAnimationUtil.HEAD, speed)
+            .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.FULL_ATTACK_BITE_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+            .setSpeed(AzAlienAnimationUtil.BODY, speed)
             .build()
             .dispatchForEntity(warrior);
     }
 
     public void rightClawAttack() {
-        ARMATTACK_RIGHTARM.dispatchForEntity(warrior);
+        CLAW_ATTACK.dispatchForEntity(warrior);
     }
 
     public void rightClawAttack(float speed) {
         AzCommand.<Warrior>replay()
-            .play(AzAlienAnimationUtil.RIGHT_ARM, WarriorAnimationRefs.ATTACKCLAW_RIGHTARM_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
-            .setSpeed(AzAlienAnimationUtil.RIGHT_ARM, speed)
+            .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.FULL_ATTACK_CLAW_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+            .setSpeed(AzAlienAnimationUtil.BODY, speed)
             .build()
             .dispatchForEntity(warrior);
     }
 
     public void tailAttack() {
-        TAILATTACKQUAD_TAIL.dispatchForEntity(warrior);
+        TAIL_ATTACK.dispatchForEntity(warrior);
     }
 
     public void tailAttack(float speed) {
         AzCommand.<Warrior>replay()
-            .play(AzAlienAnimationUtil.TAIL, WarriorAnimationRefs.ATTACKTAIL_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
-            .setSpeed(AzAlienAnimationUtil.TAIL, speed)
+            .play(AzAlienAnimationUtil.BODY, WarriorAnimationRefs.FULL_ATTACK_TAIL_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
+            .setSpeed(AzAlienAnimationUtil.BODY, speed)
             .build()
             .dispatchForEntity(warrior);
     }

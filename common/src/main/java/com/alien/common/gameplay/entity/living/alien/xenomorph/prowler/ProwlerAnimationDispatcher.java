@@ -79,6 +79,16 @@ public class ProwlerAnimationDispatcher {
         CRAWL_ALL.dispatchForEntity(prowler);
     }
 
+    public void crawl(float speed) {
+        AzAlienAnimationUtil.composeWithSpeed(
+            AzAlienAnimationUtil.XENO_LIMBS,
+            "crawl",
+            AzPlayBehaviors.LOOP,
+            AzDispatchMode.PLAY_IF_NOT_PLAYING,
+            speed
+        ).dispatchForEntity(prowler);
+    }
+
     public void crawlHold() {
         CRAWL_ALL_HOLD.dispatchForEntity(prowler);
     }

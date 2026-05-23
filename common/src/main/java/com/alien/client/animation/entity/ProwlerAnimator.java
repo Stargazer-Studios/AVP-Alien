@@ -110,7 +110,7 @@ public class ProwlerAnimator extends AzEntityAnimator<Prowler> {
             animFunction = dispatcher::swim;
         } else if (isMoving) {
             if (isCrawling) {
-                animFunction = dispatcher::crawl;
+                animFunction = () -> dispatcher.crawl(AzAlienAnimationUtil.crawlAnimationSpeed(prowler));
             } else if (prowler.isMovingQuickly.get()) {
                 animFunction = dispatcher::run;
             } else {

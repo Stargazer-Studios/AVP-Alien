@@ -26,11 +26,11 @@ public class RavagerAnimationDispatcher {
         .play(AzAlienAnimationUtil.BODY, RavagerAnimationRefs.SWIM_ATTACK_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
-    private static final AzCommand<Ravager> SPECIAL_ATTACK_WARMUP = AzCommand.<Ravager>idempotent()
+    private static final AzCommand<Ravager> SPECIAL_CLEAVE_WARMUP = AzCommand.<Ravager>idempotent()
         .play(AzAlienAnimationUtil.BODY, RavagerAnimationRefs.SPECIAL_ATTACK_WARMUP_ANIMATION_NAME, AzPlayBehaviors.HOLD_ON_LAST_FRAME)
         .build();
 
-    private static final AzCommand<Ravager> SPECIAL_ATTACK_ACTIVATE = AzCommand.<Ravager>replay()
+    private static final AzCommand<Ravager> SPECIAL_CLEAVE_ACTIVATE = AzCommand.<Ravager>replay()
         .play(AzAlienAnimationUtil.BODY, RavagerAnimationRefs.SPECIAL_ATTACK_ACTIVATE_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
         .build();
 
@@ -132,11 +132,11 @@ public class RavagerAnimationDispatcher {
             .dispatchForEntity(ravager);
     }
 
-    public void specialAttackWarmup() {
-        SPECIAL_ATTACK_WARMUP.dispatchForEntity(ravager);
+    public void specialCleaveWarmup() {
+        SPECIAL_CLEAVE_WARMUP.dispatchForEntity(ravager);
     }
 
-    public void specialAttackWarmup(float speed) {
+    public void specialCleaveWarmup(float speed) {
         AzCommand.<Ravager>idempotent()
             .play(AzAlienAnimationUtil.BODY, RavagerAnimationRefs.SPECIAL_ATTACK_WARMUP_ANIMATION_NAME, AzPlayBehaviors.HOLD_ON_LAST_FRAME)
             .setSpeed(AzAlienAnimationUtil.BODY, speed)
@@ -144,11 +144,11 @@ public class RavagerAnimationDispatcher {
             .dispatchForEntity(ravager);
     }
 
-    public void specialAttackActivate() {
-        SPECIAL_ATTACK_ACTIVATE.dispatchForEntity(ravager);
+    public void specialCleaveActivate() {
+        SPECIAL_CLEAVE_ACTIVATE.dispatchForEntity(ravager);
     }
 
-    public void specialAttackActivate(float speed) {
+    public void specialCleaveActivate(float speed) {
         AzCommand.<Ravager>replay()
             .play(AzAlienAnimationUtil.BODY, RavagerAnimationRefs.SPECIAL_ATTACK_ACTIVATE_ANIMATION_NAME, AzPlayBehaviors.PLAY_ONCE)
             .setSpeed(AzAlienAnimationUtil.BODY, speed)

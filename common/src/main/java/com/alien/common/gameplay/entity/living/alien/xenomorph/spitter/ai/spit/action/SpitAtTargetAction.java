@@ -1,7 +1,7 @@
 package com.alien.common.gameplay.entity.living.alien.xenomorph.spitter.ai.spit.action;
 
 import com.alien.common.gameplay.entity.living.alien.xenomorph.spitter.Spitter;
-import com.alien.common.gameplay.entity.projectile.AcidSpit;
+import com.alien.common.gameplay.entity.living.alien.xenomorph.spitter.SpitterSpitAttack;
 import com.blib.api.common.goap.v1.GOAPSensors;
 import com.just.ai.goap.StateKey;
 import com.just.ai.goap.action.Action;
@@ -11,12 +11,6 @@ import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.world.entity.LivingEntity;
 
 public class SpitAtTargetAction {
-
-    private static final float PROJECTILE_POWER = 1.5F;
-
-    private static final float PROJECTILE_INACCURACY = 2.0F;
-
-    private static final double ARC_COMPENSATION_FACTOR = 0.1;
 
     private static final int WIND_UP_TICKS = 10;
 
@@ -60,28 +54,10 @@ public class SpitAtTargetAction {
             return Action.Signal.CONTINUE;
         }
 
-        fireProjectile(spitter, target);
+        SpitterSpitAttack.shootAtTarget(spitter, target);
         blackboard.set(KEY_HAS_FIRED, true);
 
         return Action.Signal.ABORT;
-    }
-
-    private static void fireProjectile(Spitter spitter, LivingEntity target) {
-        var spit = new AcidSpit(spitter, spitter.level());
-        var targetEyePos = target.getEyePosition();
-        var directionX = targetEyePos.x - spitter.getX();
-        var directionY = targetEyePos.y - spitter.getEyeY();
-        var directionZ = targetEyePos.z - spitter.getZ();
-        var gravityCompensation = computeGravityCompensation(directionX, directionZ);
-
-        spit.shoot(directionX, directionY + gravityCompensation, directionZ, PROJECTILE_POWER, PROJECTILE_INACCURACY);
-        spitter.level().addFreshEntity(spit);
-        spitter.getSpitterData().setLastSpitTick(spitter.tickCount);
-    }
-
-    private static double computeGravityCompensation(double directionX, double directionZ) {
-        var horizontalDistance = Math.sqrt(directionX * directionX + directionZ * directionZ);
-        return horizontalDistance * ARC_COMPENSATION_FACTOR;
     }
 
     private SpitAtTargetAction() {

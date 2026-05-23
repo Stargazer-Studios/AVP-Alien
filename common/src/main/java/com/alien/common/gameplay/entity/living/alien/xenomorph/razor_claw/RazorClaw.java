@@ -28,21 +28,25 @@ import org.jetbrains.annotations.Nullable;
 public class RazorClaw extends Xenomorph implements GOAPUser<RazorClaw> {
 
     public static final AttackType CLAW = AttackType.builder("razor_claw_claw")
+        .requiresAnyArm()
         .defaultDurationInTicks(10)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType BITE = AttackType.builder("razor_claw_bite")
+        .requiresHead()
         .defaultDurationInTicks(8)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType TAIL = AttackType.builder("razor_claw_tail")
+        .requiresTail()
         .defaultDurationInTicks(12)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();
 
     public static final AttackType SWIM_ATTACK = AttackType.builder("razor_claw_swim_attack")
+        .requiresTail()
         .defaultDurationInTicks(10)
         .sound(AlienSoundEvents.ENTITY_XENOMORPH_ATTACK)
         .build();

@@ -91,6 +91,9 @@ public class CryForHelpListener implements GameEventListener {
         if (location == null || !location.isAlive()) {
             return false;
         }
+        if (location.isInCombatRespite()) {
+            return false;
+        }
 
         // Cap concurrent helpers per location.
         var loadedXenomorphCount = location.loadedMembersByType()

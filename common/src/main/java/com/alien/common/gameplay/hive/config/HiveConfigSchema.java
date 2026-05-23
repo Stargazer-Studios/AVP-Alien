@@ -59,6 +59,7 @@ public final class HiveConfigSchema {
             "raidSizePerClaimedChunk",
             "raidEngageRadiusBlocks"
         ),
+        group("Combat Pressure", "combatRespiteKillThreshold", "combatRespiteMinTicks", "combatRespiteMaxTicks"),
         group("Leadership", "empressMoltDurationTicks", "localLeaderPickCadenceTicks"),
         group(
             "Abstract Spread",

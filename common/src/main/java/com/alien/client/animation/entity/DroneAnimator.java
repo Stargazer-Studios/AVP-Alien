@@ -33,24 +33,6 @@ public class DroneAnimator extends AzEntityAnimator<Drone> {
         animationTrackContainer.add(
             AzAnimationTrack.builder(this, AzAlienAnimationUtil.BODY)
                 .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.HEAD)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.LEFT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_ARM)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.RIGHT_LEG)
-                .setTransitionLength(5)
-                .build(),
-            AzAnimationTrack.builder(this, AzAlienAnimationUtil.TAIL)
-                .setTransitionLength(5)
                 .build()
         );
     }
@@ -109,7 +91,7 @@ public class DroneAnimator extends AzEntityAnimator<Drone> {
             animFunction = dispatcher::swim;
         } else if (isMoving) {
             if (isCrawling) {
-                animFunction = dispatcher::crawl;
+                animFunction = () -> dispatcher.crawl(AzAlienAnimationUtil.crawlAnimationSpeed(drone));
             } else if (drone.isMovingQuickly.get()) {
                 animFunction = dispatcher::run;
             } else {
@@ -127,11 +109,11 @@ public class DroneAnimator extends AzEntityAnimator<Drone> {
         String animationName;
 
         if (attackType == Drone.BITE)
-            animationName = DroneAnimationRefs.ATTACKBITE_HEAD_ANIMATION_NAME;
+            animationName = DroneAnimationRefs.FULL_ATTACK_BITE_ANIMATION_NAME;
         else if (attackType == Drone.CLAW)
-            animationName = DroneAnimationRefs.ATTACKCLAW_RIGHTARM_ANIMATION_NAME;
+            animationName = DroneAnimationRefs.FULL_ATTACK_CLAW_ANIMATION_NAME;
         else if (attackType == Drone.TAIL)
-            animationName = DroneAnimationRefs.ATTACKTAIL_TAIL_ANIMATION_NAME;
+            animationName = DroneAnimationRefs.FULL_ATTACK_TAIL_ANIMATION_NAME;
         else
             animationName = null;
 
